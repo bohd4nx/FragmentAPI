@@ -14,100 +14,77 @@ A powerful API service for programmatically sending Telegram Stars and gifting P
 The API is publicly available at **[api.bohd4n.dev](https://api.bohd4n.dev)** with the following endpoints:
 
 | Service | Endpoint                                   | Description                        |
-|---------|--------------------------------------------|------------------------------------|
+| ------- | ------------------------------------------ | ---------------------------------- |
 | Stars   | `https://api.bohd4n.dev/api/v1/BuyStars`   | Send stars to Telegram usernames   |
 | Premium | `https://api.bohd4n.dev/api/v1/BuyPremium` | Gift premium to Telegram usernames |
+| Balance | `https://api.bohd4n.dev/api/v1/Balance`    | Check TON wallet balance           |
 
 ## Authentication
 
 To use the API, you'll need:
 
-1. **Fragment cookies**  - Your authentication cookies from Fragment
-2. **Seed phrase**  - Your wallet seed phrase for transaction signing
+1. **Fragment cookies** - Your authentication cookies from Fragment
+2. **Seed phrase** - Your wallet seed phrase for transaction signing
 3. **Fragment hash** - Your Fragment API hash
 
-## Sending Stars
+## Example Usage
 
-### Request
+### Python Example (Stars)
 
-```http
-POST https://api.bohd4n.dev/api/v1/BuyStars
-Content-Type: application/json
+```python
+import requests
+import json
 
-{
-  "username": "@username",
-  "amount": 50,
-  "cookies": "your_fragment_cookies",
-  "seed": "your_seed_phrase",
-  "hash": "your_fragment_hash"
-}
+response = requests.post(
+    'https://api.bohd4n.dev/api/v1/BuyStars',
+    json={
+        'username': '@username',  # Target username
+        'amount': 50,  # Amount of stars to send
+        'hash': '',  # Fragment account hash
+        'cookies': '',  # Your Fragment cookies
+        'seed': ''  # TON wallet seed phrase (W5)
+    }
+)
+
+print("Response:", json.dumps(response.json(), indent=4))
 ```
 
-### Parameters
+### Python Example (Premium)
 
-| Parameter | Type   | Required | Description                                |
-|-----------|--------|----------|--------------------------------------------|
-| username  | string | Yes      | Target Telegram username                   |
-| amount    | int    | Yes      | Amount of stars to send (must be positive) |
-| cookies   | string | Yes      | Your Fragment cookies                      |
-| seed      | string | Yes      | Your wallet seed phrase                    |
-| hash      | string | Yes      | Your Fragment API hash                     |
+```python
+import requests
+import json
 
-### Success Response
+response = requests.post(
+    'https://api.bohd4n.dev/api/v1/BuyPremium',
+    json={
+        'username': '@username',  # Target username
+        'duration': 3,  # Duration in months (3, 6, or 12)
+        'hash': '',  # Fragment account hash
+        'cookies': '',  # Your Fragment cookies
+        'seed': ''  # TON wallet seed phrase (W5)
+    }
+)
 
-```json
-{
-  "success": true,
-  "message": "50 stars sent to @username",
-  "data": {
-    "transaction_id": "8f7e32a19c5694bb72d7b7b30139902e55e2ffab30c5b37bc36770e25a1e89a1",
-    "username": "@username",
-    "amount": 50,
-    "timestamp": 1694792445
-  }
-}
+print("Response:", json.dumps(response.json(), indent=4))
 ```
 
-## Gifting Premium
+### Python Example (Check Balance)
 
-### Request
+```python
+import requests
+import json
 
-```http
-POST https://api.bohd4n.dev/api/v1/BuyPremium
-Content-Type: application/json
+response = requests.get(
+    'https://api.bohd4n.dev/api/v1/Balance',
+    json={
+        'hash': '',  # Fragment account hash
+        'cookies': '',  # Your Fragment cookies
+        'seed': ''  # TON wallet seed phrase (W5)
+    }
+)
 
-{
-  "username": "@username",
-  "duration": 3,
-  "cookies": "your_fragment_cookies",
-  "seed": "your_seed_phrase",
-  "hash": "your_fragment_hash"
-}
-```
-
-### Parameters
-
-| Parameter | Type   | Required | Description                      |
-|-----------|--------|----------|----------------------------------|
-| username  | string | Yes      | Target Telegram username         |
-| duration  | int    | Yes      | Duration in months (3, 6, or 12) |
-| cookies   | string | Yes      | Your Fragment cookies            |
-| seed      | string | Yes      | Your wallet seed phrase          |
-| hash      | string | Yes      | Your Fragment API hash           |
-
-### Success Response
-
-```json
-{
-  "success": true,
-  "message": "3 months premium sent to @username",
-  "data": {
-    "transaction_id": "6a9d37f1c32e507b7d4b5c6a90a45c7f8e12d6ba31f98c43e56b9ca7d11e47ab",
-    "username": "@username",
-    "duration": 3,
-    "timestamp": 1694792522
-  }
-}
+print("Response:", json.dumps(response.json(), indent=4))
 ```
 
 ## Error Responses
@@ -128,54 +105,12 @@ All error responses follow this format:
 ### Error Codes
 
 | Status Code | Error Code       | Description                                            |
-|-------------|------------------|--------------------------------------------------------|
+| ----------- | ---------------- | ------------------------------------------------------ |
 | 400         | INVALID_PARAMS   | Invalid or missing request parameters                  |
 | 401         | AUTH_FAILED      | Authentication failed (invalid cookies, seed, or hash) |
 | 402         | PAYMENT_REQUIRED | Not enough funds in your Fragment wallet               |
 | 404         | USER_NOT_FOUND   | Target username not found                              |
 | 500         | SERVER_ERROR     | Internal server error                                  |
-
-## Example Usage
-
-### Python Example (Stars)
-
-```python
-import requests
-import json
-
-response = requests.post(
-    'https://api.bohd4n.dev/api/v1/BuyStars',
-    json={
-        'username': '@username',  # Target username
-        'amount': 50,  # Amount of stars to send
-        'hash': '',  # Fragment account hash
-        'cookies': '',  # Your Fragment cookies
-        'seed': ''  # Seed phrase for purchase
-    }
-)
-
-print("Response:", json.dumps(response.json(), indent=4))
-```
-
-### Python Example (Premium)
-
-```python
-import requests
-import json
-
-response = requests.post(
-    'https://api.bohd4n.dev/api/v1/BuyPremium',
-    json={
-        'username': '@username',  # Target username
-        'duration': 3,  # Duration in months (3, 6, or 12)
-        'hash': '',  # Fragment account hash
-        'cookies': '',  # Your Fragment cookies
-        'seed': ''  # Seed phrase for purchase
-    }
-)
-
-print("Response:", json.dumps(response.json(), indent=4))
-```
 
 ## Notes
 
@@ -195,6 +130,7 @@ print("Response:", json.dumps(response.json(), indent=4))
 For support or feature requests, contact [@bohd4nx](https://t.me/bohd4nx) on Telegram.
 
 ---
+
 <div align="center">
     <h4>Built with ❤️ by <a href="https://t.me/bohd4nx" target="_blank">Bohdan</a></h4>
 </div>
