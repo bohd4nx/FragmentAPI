@@ -1,5 +1,3 @@
-import json
-
 import requests
 
 """
@@ -19,21 +17,21 @@ response = requests.post(
     'https://api.bohd4n.dev/api/v1/BuyStars',
     json={
         'username': '@bohd4nx',  # Target username
-        'amount': 50,  # Amount of stars to send
+        'amount': 50,  # Amount of stars to send (minimum 50)
         'hash': '',  # Fragment account hash
         'cookies': '',  # Your Fragment cookies
         'seed': ''  # Seed phrase for purchase
     }
 )
 
-print("Response:", json.dumps(response.json(), indent=4))
+print(response.json())
 
 # Example: Successful response
 """
 SUCCESS (Status code: 200)
 {
     "success": true,
-    "message": "50 stars sent to @bohd4nx",
+    "message": "50 stars sent to @bohd4nx. They will receive them within a minute.",
     "data": {
         "transaction_id": "8f7e32a19c5694bb72d7b7b30139902e55e2ffab30c5b37bc36770e25a1e89a1",
         "username": "@bohd4nx",
@@ -49,13 +47,9 @@ MISSING_SEED (Status code: 400)
 {
     "success": false,
     "error": {
-        "code": "INVALID_PARAMS",
-        "message": "Missing or invalid parameters in request",
-        "details": {
-            "missing_fields": [
-                "Seed phrase is required. You must provide your wallet seed phrase."
-            ]
-        }
+        "type": "INVALID_PARAMS",
+        "code": 400,
+        "message": "Missing required fields: seed"
     }
 }
 """
@@ -66,30 +60,22 @@ MISSING_HASH (Status code: 400)
 {
     "success": false,
     "error": {
-        "code": "INVALID_PARAMS",
-        "message": "Missing or invalid parameters in request",
-        "details": {
-            "missing_fields": [
-                "Fragment hash is required. You can find it in your Fragment API calls."
-            ]
-        }
+        "type": "INVALID_PARAMS",
+        "code": 400,
+        "message": "Missing required fields: hash"
     }
 }
 """
 
-# Example: Missing amount
+# Example: Invalid amount (less than 50)
 """
-MISSING_AMOUNT (Status code: 400)
+INVALID_AMOUNT (Status code: 400)
 {
     "success": false,
     "error": {
-        "code": "INVALID_PARAMS",
-        "message": "Missing or invalid parameters in request",
-        "details": {
-            "missing_fields": [
-                "Field 'amount': Field required"
-            ]
-        }
+        "type": "INVALID_PARAMS",
+        "code": 400,
+        "message": "Stars amount must be at least 50"
     }
 }
 """
@@ -100,9 +86,9 @@ BLOCKCHAIN_ERROR (Status code: 402)
 {
     "success": false,
     "error": {
-        "code": "PAYMENT_REQUIRED",
-        "message": "Payment error on TON blockchain. Please try again in a minute or contact the developer.",
-        "details": {}
+        "type": "PAYMENT_REQUIRED",
+        "code": 402,
+        "message": "Payment error on TON blockchain. Please try again in a minute or contact the developer."
     }
 }
 """

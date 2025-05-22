@@ -14,10 +14,10 @@ A powerful API service for programmatically sending Telegram Stars and gifting P
 The API is publicly available at **[api.bohd4n.dev](https://api.bohd4n.dev)** with the following endpoints:
 
 | Service | Endpoint                                   | Description                        |
-| ------- | ------------------------------------------ | ---------------------------------- |
+|---------|--------------------------------------------|------------------------------------|
 | Stars   | `https://api.bohd4n.dev/api/v1/BuyStars`   | Send stars to Telegram usernames   |
 | Premium | `https://api.bohd4n.dev/api/v1/BuyPremium` | Gift premium to Telegram usernames |
-| Balance | `https://api.bohd4n.dev/api/v1/Balance`    | Check TON wallet balance           |
+| Balance | `https://api.bohd4n.dev/api/v1/GetBalance` | Check TON wallet balance           |
 
 ## Authentication
 
@@ -75,12 +75,11 @@ print("Response:", json.dumps(response.json(), indent=4))
 import requests
 import json
 
-response = requests.get(
-    'https://api.bohd4n.dev/api/v1/Balance',
+response = requests.post(
+    'https://api.bohd4n.dev/api/v1/GetBalance',
     json={
-        'hash': '',  # Fragment account hash
-        'cookies': '',  # Your Fragment cookies
         'seed': ''  # TON wallet seed phrase (W5)
+        # Alternatively, you can use 'address' instead of 'seed'
     }
 )
 
@@ -105,7 +104,7 @@ All error responses follow this format:
 ### Error Codes
 
 | Status Code | Error Code       | Description                                            |
-| ----------- | ---------------- | ------------------------------------------------------ |
+|-------------|------------------|--------------------------------------------------------|
 | 400         | INVALID_PARAMS   | Invalid or missing request parameters                  |
 | 401         | AUTH_FAILED      | Authentication failed (invalid cookies, seed, or hash) |
 | 402         | PAYMENT_REQUIRED | Not enough funds in your Fragment wallet               |

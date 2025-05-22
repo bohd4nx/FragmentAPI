@@ -1,5 +1,3 @@
-import json
-
 import requests
 
 """
@@ -26,14 +24,14 @@ response = requests.post(
     }
 )
 
-print("Response:", json.dumps(response.json(), indent=4))
+print(response.json())
 
 # Example: Successful response
 """
 SUCCESS (Status code: 200)
 {
     "success": true,
-    "message": "3 months premium sent to @bohd4nx",
+    "message": "3 months premium sent to @bohd4nx. They will receive it within a minute.",
     "data": {
         "transaction_id": "6a9d37f1c32e507b7d4b5c6a90a45c7f8e12d6ba31f98c43e56b9ca7d11e47ab",
         "username": "@bohd4nx",
@@ -49,13 +47,9 @@ MISSING_SEED (Status code: 400)
 {
     "success": false,
     "error": {
-        "code": "INVALID_PARAMS",
-        "message": "Missing or invalid parameters in request",
-        "details": {
-            "missing_fields": [
-                "Seed phrase is required. You must provide your wallet seed phrase."
-            ]
-        }
+        "type": "INVALID_PARAMS",
+        "code": 400,
+        "message": "Missing required fields: seed"
     }
 }
 """
@@ -66,13 +60,9 @@ MISSING_HASH (Status code: 400)
 {
     "success": false,
     "error": {
-        "code": "INVALID_PARAMS",
-        "message": "Missing or invalid parameters in request",
-        "details": {
-            "missing_fields": [
-                "Fragment hash is required. You can find it in your Fragment API calls."
-            ]
-        }
+        "type": "INVALID_PARAMS",
+        "code": 400,
+        "message": "Missing required fields: hash"
     }
 }
 """
@@ -83,13 +73,9 @@ MISSING_COOKIES (Status code: 400)
 {
     "success": false,
     "error": {
-        "code": "INVALID_PARAMS",
-        "message": "Missing or invalid parameters in request",
-        "details": {
-            "missing_fields": [
-                "Fragment cookies are required. You must provide valid authentication cookies."
-            ]
-        }
+        "type": "INVALID_PARAMS",
+        "code": 400,
+        "message": "Missing required fields: cookies"
     }
 }
 """
@@ -100,9 +86,9 @@ USER_NOT_FOUND (Status code: 404)
 {
     "success": false,
     "error": {
-        "code": "USER_NOT_FOUND",
-        "message": "Target username not found",
-        "details": {}
+        "type": "USER_NOT_FOUND",
+        "code": 404,
+        "message": "Invalid recipient: Recipient not found"
     }
 }
 """
@@ -113,9 +99,9 @@ AUTH_FAILED (Status code: 401)
 {
     "success": false,
     "error": {
-        "code": "AUTH_FAILED",
-        "message": "Authentication failed (invalid cookies, seed, or hash)",
-        "details": {}
+        "type": "AUTH_FAILED",
+        "code": 401,
+        "message": "Authentication failed (invalid cookies, seed, or hash)"
     }
 }
 """
@@ -126,9 +112,9 @@ INSUFFICIENT_FUNDS (Status code: 402)
 {
     "success": false,
     "error": {
-        "code": "PAYMENT_REQUIRED",
-        "message": "Not enough funds in your Fragment wallet",
-        "details": {}
+        "type": "PAYMENT_REQUIRED",
+        "code": 402,
+        "message": "Insufficient balance: 0.1 TON available, 9.17 TON required"
     }
 }
 """
