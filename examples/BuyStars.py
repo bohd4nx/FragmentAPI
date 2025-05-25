@@ -6,7 +6,7 @@ for a username using the Fragment API by @bohd4nx.
 
 Required parameters:
 - username: Target Telegram username to send stars to
-- amount: Number of stars to purchase (integer)
+- amount: Number of stars to purchase (integer, minimum 50)
 - cookies: Fragment authentication cookies
 - seed: Wallet seed phrase for purchase transaction
 - hash: Fragment account hash
@@ -41,54 +41,80 @@ SUCCESS (Status code: 200)
 }
 """
 
-# Example: Missing seed phrase
+# Example: Missing required fields
 """
-MISSING_SEED (Status code: 400)
+INVALID_REQUEST (Status code: 400)
 {
     "success": false,
     "error": {
-        "type": "INVALID_PARAMS",
+        "type": "INVALID_REQUEST",
         "code": 400,
-        "message": "Missing required fields: seed"
-    }
-}
-"""
-
-# Example: Missing fragment hash
-"""
-MISSING_HASH (Status code: 400)
-{
-    "success": false,
-    "error": {
-        "type": "INVALID_PARAMS",
-        "code": 400,
-        "message": "Missing required fields: hash"
+        "message": "Missing required fields: cookies, seed, hash"
     }
 }
 """
 
 # Example: Invalid amount (less than 50)
 """
-INVALID_AMOUNT (Status code: 400)
+INVALID_REQUEST (Status code: 400)
 {
     "success": false,
     "error": {
-        "type": "INVALID_PARAMS",
+        "type": "INVALID_REQUEST",
         "code": 400,
         "message": "Stars amount must be at least 50"
     }
 }
 """
 
-# Example: Blockchain error
+# Example: User not found
 """
-BLOCKCHAIN_ERROR (Status code: 402)
+USER_NOT_FOUND (Status code: 404)
 {
     "success": false,
     "error": {
-        "type": "PAYMENT_REQUIRED",
+        "type": "USER_NOT_FOUND",
+        "code": 404,
+        "message": "Invalid recipient: User not found or cannot receive stars"
+    }
+}
+"""
+
+# Example: Authentication failed
+"""
+AUTHENTICATION_FAILED (Status code: 401)
+{
+    "success": false,
+    "error": {
+        "type": "AUTHENTICATION_FAILED",
+        "code": 401,
+        "message": "Authentication failed"
+    }
+}
+"""
+
+# Example: Insufficient funds
+"""
+INSUFFICIENT_FUNDS (Status code: 402)
+{
+    "success": false,
+    "error": {
+        "type": "INSUFFICIENT_FUNDS",
         "code": 402,
-        "message": "Payment error on TON blockchain. Please try again in a minute or contact the developer."
+        "message": "Insufficient balance: 0.1 TON available, 2.5 TON required"
+    }
+}
+"""
+
+# Example: Blockchain transaction error
+"""
+BLOCKCHAIN_ERROR (Status code: 502)
+{
+    "success": false,
+    "error": {
+        "type": "BLOCKCHAIN_ERROR",
+        "code": 502,
+        "message": "Transaction rejected by blockchain. Please try again."
     }
 }
 """

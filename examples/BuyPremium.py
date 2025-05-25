@@ -6,7 +6,7 @@ for a username using the Fragment API by @bohd4nx.
 
 Required parameters:
 - username: Target Telegram username to send premium to
-- duration: Duration in months (integer)
+- duration: Duration in months (3, 6, or 12)
 - cookies: Fragment authentication cookies
 - seed: Wallet seed phrase for purchase transaction
 - hash: Fragment account hash
@@ -41,41 +41,15 @@ SUCCESS (Status code: 200)
 }
 """
 
-# Example: Missing seed phrase
+# Example: Missing required fields
 """
-MISSING_SEED (Status code: 400)
+INVALID_REQUEST (Status code: 400)
 {
     "success": false,
     "error": {
-        "type": "INVALID_PARAMS",
+        "type": "INVALID_REQUEST",
         "code": 400,
-        "message": "Missing required fields: seed"
-    }
-}
-"""
-
-# Example: Missing fragment hash
-"""
-MISSING_HASH (Status code: 400)
-{
-    "success": false,
-    "error": {
-        "type": "INVALID_PARAMS",
-        "code": 400,
-        "message": "Missing required fields: hash"
-    }
-}
-"""
-
-# Example: Missing cookies
-"""
-MISSING_COOKIES (Status code: 400)
-{
-    "success": false,
-    "error": {
-        "type": "INVALID_PARAMS",
-        "code": 400,
-        "message": "Missing required fields: cookies"
+        "message": "Missing required fields: cookies, seed, hash"
     }
 }
 """
@@ -95,13 +69,13 @@ USER_NOT_FOUND (Status code: 404)
 
 # Example: Authentication failed
 """
-AUTH_FAILED (Status code: 401)
+AUTHENTICATION_FAILED (Status code: 401)
 {
     "success": false,
     "error": {
-        "type": "AUTH_FAILED",
+        "type": "AUTHENTICATION_FAILED",
         "code": 401,
-        "message": "Authentication failed (invalid cookies, seed, or hash)"
+        "message": "Authentication failed"
     }
 }
 """
@@ -112,9 +86,22 @@ INSUFFICIENT_FUNDS (Status code: 402)
 {
     "success": false,
     "error": {
-        "type": "PAYMENT_REQUIRED",
+        "type": "INSUFFICIENT_FUNDS",
         "code": 402,
         "message": "Insufficient balance: 0.1 TON available, 9.17 TON required"
+    }
+}
+"""
+
+# Example: Blockchain transaction error
+"""
+BLOCKCHAIN_ERROR (Status code: 502)
+{
+    "success": false,
+    "error": {
+        "type": "BLOCKCHAIN_ERROR",
+        "code": 502,
+        "message": "Transaction failed: external message was not accepted"
     }
 }
 """

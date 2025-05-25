@@ -13,8 +13,7 @@ Required parameters:
 response = requests.post(
     'https://api.bohd4n.dev/api/v1/GetBalance',
     json={
-        'seed': ''
-        # Your wallet seed phrase
+        'seed': ''  # Your wallet seed phrase
     }
 )
 
@@ -34,25 +33,25 @@ response = requests.post(
 """
 SUCCESS (Status code: 200)
 {
-  "success": true,
-  "data": {
-    "address": "EQAJgLBs8xqFAqFmswDPVlfrmeoDMGi-1up4HzzqYxqrC1Fs",
-    "balance": {
-      "value": 0.0,
-      "currency": "TON"
-    },
-    "timestamp": 1747948357
-  }
+    "success": true,
+    "data": {
+        "address": "EQAJgLBs8xqFAqFmswDPVlfrmeoDMGi-1up4HzzqYxqrC1Fs",
+        "balance": {
+            "value": 12.345,
+            "currency": "TON"
+        },
+        "timestamp": 1747948357
+    }
 }
 """
 
 # Example: Missing both seed and address
 """
-MISSING_PARAMS (Status code: 400)
+INVALID_REQUEST (Status code: 400)
 {
     "success": false,
     "error": {
-        "type": "INVALID_PARAMS",
+        "type": "INVALID_REQUEST",
         "code": 400,
         "message": "At least one of these fields must be provided: seed, address"
     }
@@ -61,26 +60,39 @@ MISSING_PARAMS (Status code: 400)
 
 # Example: Invalid seed phrase
 """
-INVALID_SEED (Status code: 400)
+INVALID_REQUEST (Status code: 400)
 {
     "success": false,
     "error": {
-        "type": "INVALID_PARAMS",
+        "type": "INVALID_REQUEST",
         "code": 400,
         "message": "Invalid seed phrase: Mnemonic length should be equal to 24"
     }
 }
 """
 
-# Example: Server error
+# Example: Wallet not found
 """
-SERVER_ERROR (Status code: 500)
+INVALID_REQUEST (Status code: 400)
 {
-  "success": false,
-  "error": {
-    "type": "SERVER_ERROR",
-    "code": 500,
-    "message": "Internal server error"
-  }
+    "success": false,
+    "error": {
+        "type": "INVALID_REQUEST",
+        "code": 400,
+        "message": "No wallet found for the provided seed/address"
+    }
+}
+"""
+
+# Example: Internal server error
+"""
+INTERNAL_ERROR (Status code: 500)
+{
+    "success": false,
+    "error": {
+        "type": "INTERNAL_ERROR",
+        "code": 500,
+        "message": "Failed to retrieve wallet balance"
+    }
 }
 """
