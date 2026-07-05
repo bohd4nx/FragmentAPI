@@ -28,7 +28,7 @@ async def get_fragment_hash(
     if response.status_code != 200:
         raise FragmentPageError(FragmentPageError.BAD_STATUS.format(status=response.status_code, url=page_url))
 
-    match = re.search(r"(?:https://fragment\.com)?/api\?hash=([a-f0-9]+)", response.text)
+    match = re.search(r"(?:https://fragment\.com)?\\?/api\?hash=([a-f0-9]+)", response.text)
     if not match:
         raise FragmentPageError(FragmentPageError.NOT_FOUND.format(url=page_url))
 
