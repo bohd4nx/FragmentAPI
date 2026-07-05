@@ -12,7 +12,7 @@ from pyfragment.exceptions import FragmentPageError, ParseError
 
 
 async def get_fragment_hash(
-    session: AsyncSession[Any],  # type: ignore[type-arg]
+    session: AsyncSession[Any],
     headers: dict[str, str],
     page_url: str,
 ) -> str:
@@ -43,7 +43,7 @@ def parse_json_response(response: Response, context: str) -> dict[str, Any]:
 
 
 async def fragment_request(
-    session: AsyncSession[Any],  # type: ignore[type-arg]
+    session: AsyncSession[Any],
     fragment_hash: str,
     headers: dict[str, str],
     data: dict[str, Any],
