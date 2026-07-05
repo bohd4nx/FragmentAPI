@@ -50,7 +50,7 @@ Actions:
 
 ## SSL-related broadcast failures
 
-If you get SSL-related transaction errors:
+If you get SSL-related errors during **TON transaction broadcast** (not Fragment page loading — those use curl_cffi with bundled SSL):
 
 ```bash
 pip install --upgrade certifi
