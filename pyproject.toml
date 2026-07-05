@@ -74,7 +74,6 @@ exclude = ["^examples/", "^logs/", "^tests/"]
 [[tool.mypy.overrides]]
 module = [
     "rookiepy",
-    "httpx",
     "ton_core",
     "tonutils",
     "tonutils.*",
