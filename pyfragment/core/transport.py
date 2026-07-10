@@ -5,55 +5,47 @@ import random
 import re
 from typing import Any, cast
 
-import httpx
+from curl_cffi.requests import AsyncSession, Response
 
-from pyfragment.core.constants import DEFAULT_TIMEOUT, FRAGMENT_BASE_URL
+from pyfragment.core.constants import FRAGMENT_BASE_URL
 from pyfragment.exceptions import FragmentPageError, ParseError
 
 
 async def get_fragment_hash(
-    cookies: dict[str, Any],
+    session: AsyncSession[Any],
     headers: dict[str, str],
     page_url: str,
-    timeout: float = DEFAULT_TIMEOUT,
 ) -> str:
-    page_headers = {
-        k: v
-        for k, v in headers.items()
-        if k not in ("accept", "accept-encoding", "content-type", "x-requested-with", "x-aj-referer")
-    }
-    page_headers.update(
-        {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "referer": f"{FRAGMENT_BASE_URL}/",
-            "sec-fetch-dest": "document",
-            "sec-fetch-mode": "navigate",
-            "upgrade-insecure-requests": "1",
-        }
-    )
+    # Derive the natural referer: strip the last path segment (e.g. /stars/buy → /stars)
+    parent_url = page_url.rsplit("/", 1)[0] or FRAGMENT_BASE_URL
 
-    async with httpx.AsyncClient(cookies=cookies, timeout=timeout) as session:
-        response = await session.get(page_url, headers=page_headers)
+    page_headers = {k: v for k, v in headers.items() if k not in ("content-type", "origin")}
+    page_headers["referer"] = parent_url
+    page_headers["x-aj-referer"] = parent_url
+    page_headers.pop("x-aj-referer", None)
+    page_headers.pop("x-requested-with", None)
+
+    response = await session.get(page_url, headers=page_headers)
 
     if response.status_code != 200:
         raise FragmentPageError(FragmentPageError.BAD_STATUS.format(status=response.status_code, url=page_url))
 
-    match = re.search(r"(?:https://fragment\.com)?/api\?hash=([a-f0-9]+)", response.text)
+    match = re.search(r"(?:https://fragment\.com)?\\\\?/api\?hash=([a-f0-9]+)", response.text)
     if not match:
         raise FragmentPageError(FragmentPageError.NOT_FOUND.format(url=page_url))
 
     return match.group(1)
 
 
-def parse_json_response(response: httpx.Response, context: str) -> dict[str, Any]:
+def parse_json_response(response: Response, context: str) -> dict[str, Any]:
     try:
-        return cast(dict[str, Any], response.json())
+        return cast(dict[str, Any], response.json())  # type: ignore[no-untyped-call]
     except Exception as exc:
         raise ParseError(ParseError.UNPARSEABLE.format(context=context, exc=exc)) from exc
 
 
 async def fragment_request(
-    session: httpx.AsyncClient,
+    session: AsyncSession[Any],
     fragment_hash: str,
     headers: dict[str, str],
     data: dict[str, Any],

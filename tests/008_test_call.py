@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
 import pytest
+from curl_cffi.requests import AsyncSession, Response
 
 from pyfragment import FragmentClient, FragmentPageError
 from pyfragment.core.transport import fragment_request
@@ -67,10 +67,10 @@ async def test_call_merges_extra_data(client: FragmentClient) -> None:
 
 @pytest.mark.asyncio
 async def test_fragment_request_non_200_raises() -> None:
-    response = MagicMock(spec=httpx.Response)
+    response = MagicMock(spec=Response)
     response.status_code = 429
 
-    session = AsyncMock(spec=httpx.AsyncClient)
+    session = AsyncMock(spec=AsyncSession)
     session.post = AsyncMock(return_value=response)
 
     with pytest.raises(FragmentPageError, match="429"):

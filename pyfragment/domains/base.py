@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-import httpx
+from curl_cffi.requests import AsyncSession
 
 from pyfragment.core.constants import BASE_HEADERS
 from pyfragment.core.transport import fragment_request, get_fragment_hash
@@ -27,8 +27,8 @@ async def raw_api_call(
     call_headers = {**base, "referer": page_url, "x-aj-referer": page_url}
     logger.debug("Starting Fragment API call '%s' on %s", method, page_url)
     try:
-        async with httpx.AsyncClient(cookies=cookies, timeout=timeout) as session:
-            fragment_hash = await get_fragment_hash(cookies, call_headers, page_url, timeout)
+        async with AsyncSession(cookies=cookies, timeout=timeout, impersonate="chrome") as session:
+            fragment_hash = await get_fragment_hash(session, call_headers, page_url)
             response = await fragment_request(session, fragment_hash, call_headers, payload)
             logger.debug("Completed Fragment API call '%s' with response keys: %s", method, sorted(response.keys()))
             return response

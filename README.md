@@ -46,13 +46,13 @@ async def main() -> None:
         cookies={"stel_ssid": "...", "stel_dt": "...", "stel_token": "...", "stel_ton_token": "..."},
     ) as client:
         wallet = await client.get_wallet()
-        print(f"GRAM: {wallet.gram_balance} | USDT: {wallet.usdt_balance}")
+        print("GRAM: %s | USDT: %s" % (wallet.gram_balance, wallet.usdt_balance))
 
         stars = await client.purchase_stars("@username", amount=500, payment_method=PaymentMethod.USDT_GRAM)
-        print(f"Sent {stars.amount} Stars to {stars.username} | tx: {stars.transaction_id}")
+        print("Sent %s Stars to %s | tx: %s" % (stars.amount, stars.username, stars.transaction_id))
 
         premium = await client.purchase_premium("@username", months=6, payment_method=PaymentMethod.GRAM)
-        print(f"Sent Premium {premium.amount}m to {premium.username} | tx: {premium.transaction_id}")
+        print("Sent Premium %sm to %s | tx: %s" % (premium.amount, premium.username, premium.transaction_id))
 
 
 asyncio.run(main())
