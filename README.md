@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://www.bohd4n.dev/assets/projects/pyfragment.svg" alt="pyfragment" width="96" height="96" style="border-radius: 20px;"><br><br>
+  <img src="icon.svg" alt="pyfragment" width="96" height="96" style="border-radius: 20px;"><br><br>
 
 # pyfragment
 
