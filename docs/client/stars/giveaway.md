@@ -24,7 +24,9 @@ await client.giveaway_stars(
 
 ## Return
 
-- `StarsGiveawayResult(transaction_id, channel, winners, amount)`
+- `StarsGiveawayResult(transaction_id, channel, winners, amount, confirmed)`
+
+`confirmed` reflects Fragment's own post-broadcast acknowledgement, not whether the transfer happened — see [Result Models](../../reference/models.md#confirmed).
 
 ## Typical errors
 

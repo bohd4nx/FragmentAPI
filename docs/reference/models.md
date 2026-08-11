@@ -5,12 +5,12 @@ Every high-level method returns a typed model, so you can rely on predictable fi
 Exported result models:
 
 - `CookieResult(cookies, expires)`
-- `StarsResult(transaction_id, username, amount)`
-- `PremiumResult(transaction_id, username, amount)`
-- `AdsTopupResult(transaction_id, username, amount)`
-- `AdsRechargeResult(transaction_id, amount)`
-- `StarsGiveawayResult(transaction_id, channel, winners, amount)`
-- `PremiumGiveawayResult(transaction_id, channel, winners, amount)`
+- `StarsResult(transaction_id, username, amount, confirmed)`
+- `PremiumResult(transaction_id, username, amount, confirmed)`
+- `AdsTopupResult(transaction_id, username, amount, confirmed)`
+- `AdsRechargeResult(transaction_id, amount, confirmed)`
+- `StarsGiveawayResult(transaction_id, channel, winners, amount, confirmed)`
+- `PremiumGiveawayResult(transaction_id, channel, winners, amount, confirmed)`
 - `WalletInfo(address, state, gram_balance, usdt_balance)`
 - `LoginCodeResult(number, code, active_sessions)`
 - `TerminateSessionsResult(number, message)`
@@ -34,6 +34,10 @@ Most high-level methods return one of these dataclasses.
 - `search_usernames()`: `UsernamesResult`
 - `search_numbers()`: `NumbersResult`
 - `search_gifts()`: `GiftsResult`
+
+## `confirmed`
+
+`StarsResult`, `PremiumResult`, `AdsTopupResult`, `AdsRechargeResult`, `StarsGiveawayResult`, and `PremiumGiveawayResult` all carry a `confirmed: bool` field. `transaction_id` is set as soon as the GRAM (ex TON)/USDT transfer is broadcast to the chain — the purchase itself already happened at that point. `confirmed` reflects a separate, best-effort step: after broadcasting, the client reports the transaction to Fragment and waits (up to ~60s) for Fragment's own backend to acknowledge it. If that wait times out or the report call fails, `confirmed` is `False` even though the payment went through — the method does not raise in that case. Treat `confirmed` as a UI/observability signal, not as the source of truth for whether the purchase happened.
 
 ## Methods without dataclass return
 

@@ -24,7 +24,9 @@ await client.purchase_premium(
 
 ## Return
 
-- `PremiumResult(transaction_id, username, amount)`
+- `PremiumResult(transaction_id, username, amount, confirmed)`
+
+`confirmed` reflects Fragment's own post-broadcast acknowledgement, not whether the transfer happened — see [Result Models](../../reference/models.md#confirmed).
 
 ## Typical errors
 
