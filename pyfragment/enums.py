@@ -18,6 +18,12 @@ class PaymentMethod(StrEnum):
     USDC_POL = "usdc_pol"
 
 
+SUPPORTED_PAYMENT_METHODS: set[PaymentMethod] = {
+    PaymentMethod.GRAM,
+    PaymentMethod.USDT_GRAM,
+}
+
+
 class WalletVersion(StrEnum):
     V4R2 = "V4R2"
     V5R1 = "V5R1"
