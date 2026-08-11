@@ -15,6 +15,10 @@ GIFTS_PAGE: str = f"{FRAGMENT_BASE_URL}/gifts"
 
 DEFAULT_TIMEOUT: float = 30.0
 
+# How long (and how often) to poll Fragment for its own on-chain purchase confirmation
+CONFIRM_STATE_TIMEOUT: float = 60.0
+CONFIRM_STATE_POLL_INTERVAL: float = 2.0
+
 # Fragment cookie keys required for authenticated API calls
 REQUIRED_COOKIE_KEYS: tuple[str, ...] = ("stel_ssid", "stel_dt", "stel_token", "stel_ton_token")
 

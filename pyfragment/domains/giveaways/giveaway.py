@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import random
 from typing import TYPE_CHECKING
 
 from pyfragment.core.constants import (
@@ -18,7 +17,7 @@ from pyfragment.core.constants import (
     STARS_WINNERS_MIN,
 )
 from pyfragment.domains.giveaways.models import PremiumGiveawayResult, StarsGiveawayResult
-from pyfragment.domains.payments import cancel_invoice, parse_required_payment_amount
+from pyfragment.domains.payments import cancel_invoice, confirm_purchase, parse_required_payment_amount, state_nonce
 from pyfragment.enums import PaymentMethod
 from pyfragment.exceptions import (
     ConfigurationError,
@@ -37,11 +36,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-
-
-def _state_nonce() -> str:
-    # Fragment expects a pseudo-random nonce-like dh value in giveaway state updates.
-    return str(random.randint(100_000_000, 2_147_483_647))
 
 
 async def giveaway_stars(
@@ -71,7 +65,7 @@ async def giveaway_stars(
 
         await client.call(
             "updateStarsGiveawayState",
-            {"mode": "new", "lv": "false", "dh": _state_nonce()},
+            {"mode": "new", "lv": "false", "dh": state_nonce()},
             page_url=STARS_GIVEAWAY_PAGE,
         )
         await client.call(
@@ -110,7 +104,7 @@ async def giveaway_stars(
             if transaction.get("need_verify"):
                 raise VerificationError(VerificationError.KYC_REQUIRED)
 
-            tx_hash = await process_transaction(
+            tx_hash, tx_boc = await process_transaction(
                 client,
                 transaction,
                 payment_method=payment_method,
@@ -122,6 +116,7 @@ async def giveaway_stars(
         except Exception:
             await cancel_invoice(client, req_id, STARS_GIVEAWAY_PAGE)
             raise
+        await confirm_purchase(client, account, tx_boc, transaction, "updateStarsGiveawayState", STARS_GIVEAWAY_PAGE)
         return StarsGiveawayResult(transaction_id=tx_hash, channel=channel, winners=winners, amount=amount)
 
     except FragmentError as exc:
@@ -180,7 +175,7 @@ async def giveaway_premium(
             {
                 "mode": "new",
                 "lv": "false",
-                "dh": _state_nonce(),
+                "dh": state_nonce(),
                 "quantity": "",
             },
             page_url=PREMIUM_GIVEAWAY_PAGE,
@@ -221,7 +216,7 @@ async def giveaway_premium(
             if transaction.get("need_verify"):
                 raise VerificationError(VerificationError.KYC_REQUIRED)
 
-            tx_hash = await process_transaction(
+            tx_hash, tx_boc = await process_transaction(
                 client,
                 transaction,
                 payment_method=payment_method,
@@ -233,6 +228,7 @@ async def giveaway_premium(
         except Exception:
             await cancel_invoice(client, req_id, PREMIUM_GIVEAWAY_PAGE)
             raise
+        await confirm_purchase(client, account, tx_boc, transaction, "updatePremiumGiveawayState", PREMIUM_GIVEAWAY_PAGE)
         return PremiumGiveawayResult(transaction_id=tx_hash, channel=channel, winners=winners, amount=months)
 
     except FragmentError as exc:

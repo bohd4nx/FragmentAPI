@@ -83,16 +83,15 @@ async def _check_payment_balances(
         raise WalletError(WalletError.GRAM_BALANCE_CHECK_FAILED.format(exc=exc)) from exc
 
 
-async def _broadcast_with_retry(wallet: Any, message: dict[str, Any], payload: str | Cell) -> str:
+async def _broadcast_with_retry(wallet: Any, message: dict[str, Any], payload: str | Cell) -> Any:
     """Attempt to broadcast a transaction up to 3 times, handling rate-limit and seqno errors."""
     for attempt in range(3):
         try:
-            result = await wallet.transfer(
+            return await wallet.transfer(
                 destination=message["address"],
                 amount=int(message["amount"]),  # nanograms, not GRAM (ex TON)
                 body=payload,
             )
-            return str(result.normalized_hash)
         except ProviderResponseError as exc:
             if exc.code == 429 and attempt == 0:
                 logger.warning(
@@ -125,7 +124,7 @@ async def process_transaction(
     transaction_data: dict[str, Any],
     payment_method: PaymentMethod = PaymentMethod.GRAM,
     required_payment_amount: float | None = None,
-) -> str:
+) -> tuple[str, str]:
     """Sign and broadcast a Fragment transaction with the seeded GRAM (ex TON) wallet.
 
     Args:
@@ -135,7 +134,8 @@ async def process_transaction(
         required_payment_amount: Optional amount returned by Fragment's init request.
 
     Returns:
-        Normalized transaction hash string.
+        Tuple of (normalized transaction hash, base64-encoded signed external message boc).
+        The boc is what Fragment's own `confirm_method` (e.g. confirmReq) expects.
     """
     message = _extract_message(transaction_data)
     amount_gram = int(message["amount"]) / 1_000_000_000
@@ -149,7 +149,8 @@ async def process_transaction(
         payload = clean_decode(str(message.get("payload", "")))
 
         try:
-            return await _broadcast_with_retry(wallet, message, payload)
+            result = await _broadcast_with_retry(wallet, message, payload)
+            return str(result.normalized_hash), result.as_b64
         except (WalletError, TransactionError):
             raise
         except Exception as exc:

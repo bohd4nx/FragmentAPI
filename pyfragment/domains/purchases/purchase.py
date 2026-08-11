@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import random
 from typing import TYPE_CHECKING
 
 from pyfragment.core.constants import (
@@ -13,7 +12,7 @@ from pyfragment.core.constants import (
     STARS_PURCHASE_MAX,
     STARS_PURCHASE_MIN,
 )
-from pyfragment.domains.payments import cancel_invoice, parse_required_payment_amount
+from pyfragment.domains.payments import cancel_invoice, confirm_purchase, parse_required_payment_amount, state_nonce
 from pyfragment.domains.purchases.models import PremiumResult, StarsResult
 from pyfragment.enums import PaymentMethod
 from pyfragment.exceptions import (
@@ -34,11 +33,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-
-
-def _state_nonce() -> str:
-    # Fragment accepts a pseudo-random request nonce in state update methods.
-    return str(random.randint(100_000_000, 2_147_483_647))
 
 
 async def purchase_stars(
@@ -68,7 +62,7 @@ async def purchase_stars(
 
         await client.call(
             "updateStarsBuyState",
-            {"mode": "new", "lv": "false", "dh": _state_nonce()},
+            {"mode": "new", "lv": "false", "dh": state_nonce()},
             page_url=STARS_PAGE,
         )
         result = await client.call(
@@ -97,7 +91,7 @@ async def purchase_stars(
             if transaction.get("need_verify"):
                 raise VerificationError(VerificationError.KYC_REQUIRED)
 
-            tx_hash = await process_transaction(
+            tx_hash, tx_boc = await process_transaction(
                 client,
                 transaction,
                 payment_method=payment_method,
@@ -109,6 +103,7 @@ async def purchase_stars(
         except Exception:
             await cancel_invoice(client, req_id, STARS_PAGE)
             raise
+        await confirm_purchase(client, account, tx_boc, transaction, "updateStarsBuyState", STARS_PAGE)
         return StarsResult(transaction_id=tx_hash, username=username, amount=amount)
 
     except FragmentError as exc:
@@ -158,7 +153,7 @@ async def purchase_premium(
 
         await client.call(
             "updatePremiumState",
-            {"mode": "new", "lv": "false", "dh": _state_nonce()},
+            {"mode": "new", "lv": "false", "dh": state_nonce()},
             page_url=PREMIUM_PAGE,
         )
         result = await client.call(
@@ -190,7 +185,7 @@ async def purchase_premium(
             if transaction.get("need_verify"):
                 raise VerificationError(VerificationError.KYC_REQUIRED)
 
-            tx_hash = await process_transaction(
+            tx_hash, tx_boc = await process_transaction(
                 client,
                 transaction,
                 payment_method=payment_method,
@@ -202,6 +197,7 @@ async def purchase_premium(
         except Exception:
             await cancel_invoice(client, req_id, PREMIUM_PAGE)
             raise
+        await confirm_purchase(client, account, tx_boc, transaction, "updatePremiumState", PREMIUM_PAGE)
         return PremiumResult(transaction_id=tx_hash, username=username, amount=months)
 
     except FragmentError as exc:

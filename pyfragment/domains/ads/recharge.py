@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyfragment.core.constants import ADS_TOPUP_PAGE, DEVICE_INFO, GRAM_TOPUP_MAX, GRAM_TOPUP_MIN
 from pyfragment.domains.ads.models import AdsRechargeResult
-from pyfragment.domains.payments import cancel_invoice
+from pyfragment.domains.payments import cancel_invoice, confirm_purchase
 from pyfragment.exceptions import (
     ConfigurationError,
     FragmentAPIError,
@@ -52,13 +52,14 @@ async def recharge_ads(client: FragmentClient, account: str, amount: int) -> Ads
             if transaction.get("need_verify"):
                 raise VerificationError(VerificationError.KYC_REQUIRED)
 
-            tx_hash = await process_transaction(client, transaction)
+            tx_hash, tx_boc = await process_transaction(client, transaction)
         except TransactionError:
             # The broadcast itself may or may not have reached the chain; leave the invoice alone.
             raise
         except Exception:
             await cancel_invoice(client, req_id, ADS_TOPUP_PAGE)
             raise
+        await confirm_purchase(client, account_info, tx_boc, transaction, "updateAdsState", ADS_TOPUP_PAGE)
         return AdsRechargeResult(transaction_id=tx_hash, amount=amount)
 
     except FragmentError as exc:
