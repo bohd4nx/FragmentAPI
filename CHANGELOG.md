@@ -7,6 +7,36 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- `StarsResult`, `PremiumResult`, `AdsTopupResult`, `AdsRechargeResult`, `StarsGiveawayResult`, and `PremiumGiveawayResult` now carry a `confirmed: bool` field, reflecting whether Fragment's own backend acknowledged the broadcast transaction. `transaction_id` is still set as soon as the transfer is broadcast — `confirmed` is a separate, best-effort signal.
+
+### Changed
+
+- Purchase, giveaway, and Ads topup/recharge flows now report the broadcast transaction to Fragment (`confirmReq`) and wait for Fragment's own confirmation, instead of treating a successful broadcast as the end of the flow.
+- A failed purchase/giveaway/topup now cancels the Fragment invoice it opened (`cancelInvoice`), except when the broadcast itself is what failed — in that case the invoice is left alone, since it's unclear whether the transaction reached the chain.
+- `BASE_HEADERS` no longer hardcodes `User-Agent`, `Sec-Ch-Ua*`, or `Accept-Language` — `curl_cffi`'s `impersonate="chrome"` already supplies these consistently with its real TLS/HTTP2 fingerprint, and hardcoding them risked drifting out of sync with it.
+- `get_fragment_hash()` no longer reuses XHR-style headers for the plain page load used to extract Fragment's request hash; it now lets `curl_cffi`'s page-navigation defaults apply on their own.
+- Refreshed the spoofed Tonkeeper `appVersion` to `26.07.1`.
+
+### Fixed
+
+- Fixed the request hash extraction regex in `get_fragment_hash()` to correctly match Fragment's HTML.
+- Removed the dead `x-aj-referer` header, not present in Fragment's actual traffic.
+- Excluded `*.md` from `ruff format` so CI doesn't fail whenever a `ruff` release changes how it formats Python code fences in `CHANGELOG.md`/`README.md` (`ruff` isn't pinned in dev deps).
+
+---
+
+## [2026.3.3] — 2026-07-05
+
+### Changed
+
+- Replaced `httpx` with `curl_cffi` (`impersonate="chrome"`) for all HTTP requests, for a TLS/HTTP2 fingerprint closer to a real browser.
+
+---
+
 ## [2026.3.2] — 2026-06-16
 
 ### Added
