@@ -7,6 +7,14 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Payment method validation now rejects enum values that are not implemented yet; only `ton` and `usdt_ton` are accepted at runtime.
+
+---
+
 ## [2026.3.2] — 2026-06-16
 
 ### Added
@@ -83,8 +91,6 @@ The TON blockchain has been rebranded to **GRAM (ex TON)**. All identifiers, mes
 ### Removed
 
 - `tonapi/transfer.py` and associated `TonTransferResult` / `UsdtTransferResult` models (internal, unused).
-
----
 
 ## [2026.3.0] — 2026-05-21
 
