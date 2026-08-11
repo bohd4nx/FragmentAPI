@@ -6,11 +6,12 @@ from typing import TYPE_CHECKING
 
 from pyfragment.core.constants import ADS_TOPUP_PAGE, DEVICE_INFO, GRAM_TOPUP_MAX, GRAM_TOPUP_MIN
 from pyfragment.domains.ads.models import AdsTopupResult
-from pyfragment.domains.payments import parse_required_payment_amount
+from pyfragment.domains.payments import cancel_invoice, parse_required_payment_amount
 from pyfragment.exceptions import (
     ConfigurationError,
     FragmentAPIError,
     FragmentError,
+    TransactionError,
     UnexpectedError,
     UserNotFoundError,
     VerificationError,
@@ -43,22 +44,29 @@ async def topup_gram(client: FragmentClient, username: str, amount: int, show_se
         if not req_id:
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="GRAM (ex TON) topup"))
 
-        account = await get_account_info(client)
-        transaction = await client.call(
-            "getAdsTopupLink",
-            {
-                "account": json.dumps(account),
-                "device": json.dumps(DEVICE_INFO),
-                "transaction": 1,
-                "id": req_id,
-                "show_sender": int(show_sender),
-            },
-            page_url=ADS_TOPUP_PAGE,
-        )
-        if transaction.get("need_verify"):
-            raise VerificationError(VerificationError.KYC_REQUIRED)
+        try:
+            account = await get_account_info(client)
+            transaction = await client.call(
+                "getAdsTopupLink",
+                {
+                    "account": json.dumps(account),
+                    "device": json.dumps(DEVICE_INFO),
+                    "transaction": 1,
+                    "id": req_id,
+                    "show_sender": int(show_sender),
+                },
+                page_url=ADS_TOPUP_PAGE,
+            )
+            if transaction.get("need_verify"):
+                raise VerificationError(VerificationError.KYC_REQUIRED)
 
-        tx_hash = await process_transaction(client, transaction, required_payment_amount=required_payment_amount)
+            tx_hash = await process_transaction(client, transaction, required_payment_amount=required_payment_amount)
+        except TransactionError:
+            # The broadcast itself may or may not have reached the chain; leave the invoice alone.
+            raise
+        except Exception:
+            await cancel_invoice(client, req_id, ADS_TOPUP_PAGE)
+            raise
         return AdsTopupResult(transaction_id=tx_hash, username=username, amount=amount)
 
     except FragmentError as exc:
