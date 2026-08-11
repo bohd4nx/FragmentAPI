@@ -20,15 +20,15 @@ async def raw_api_call(
     method: str,
     data: dict[str, Any] | None,
     page_url: str,
-    headers: dict[str, str] | None = None,
+    headers: dict[str, str | None] | None = None,
 ) -> dict[str, Any]:
     base = headers if headers is not None else BASE_HEADERS
     payload = {"method": method, **(data or {})}
-    call_headers = {**base, "referer": page_url, "x-aj-referer": page_url}
+    call_headers = {**base, "referer": page_url}
     logger.debug("Starting Fragment API call '%s' on %s", method, page_url)
     try:
         async with AsyncSession(cookies=cookies, timeout=timeout, impersonate="chrome") as session:
-            fragment_hash = await get_fragment_hash(session, call_headers, page_url)
+            fragment_hash = await get_fragment_hash(session, page_url)
             response = await fragment_request(session, fragment_hash, call_headers, payload)
             logger.debug("Completed Fragment API call '%s' with response keys: %s", method, sorted(response.keys()))
             return response
