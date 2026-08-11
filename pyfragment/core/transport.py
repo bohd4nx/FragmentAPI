@@ -21,7 +21,6 @@ async def get_fragment_hash(
 
     page_headers = {k: v for k, v in headers.items() if k not in ("content-type", "origin")}
     page_headers["referer"] = parent_url
-    page_headers["x-aj-referer"] = parent_url
     page_headers.pop("x-aj-referer", None)
     page_headers.pop("x-requested-with", None)
 

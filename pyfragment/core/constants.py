@@ -24,14 +24,14 @@ BASE_HEADERS: dict[str, str] = {
     "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
     "origin": FRAGMENT_BASE_URL,
     "priority": "u=1, i",
-    "sec-ch-ua": '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
-    "sec-ch-ua-mobile": "?1",
-    "sec-ch-ua-platform": '"Android"',
+    "sec-ch-ua": '"Not=A?Brand";v="99", "Google Chrome";v="146", "Chromium";v="146"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
     "user-agent": (
-        "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
     ),
     "x-requested-with": "XMLHttpRequest",
 }
