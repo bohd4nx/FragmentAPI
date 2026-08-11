@@ -64,7 +64,7 @@ def _patch_wallet(wallet: MagicMock) -> Generator[None, None, None]:
 
 @pytest.mark.asyncio
 async def test_sufficient_balance_broadcasts() -> None:
-    wallet = _make_wallet(balance_nanotons=1_000_000_000)  # 1 GRAM, above threshold
+    wallet = _make_wallet(balance_nanotons=1_000_000_000)  # 1 GRAM, above payment + reserve
     with _patch_wallet(wallet), patch("pyfragment.services.tonapi.transaction.clean_decode", return_value="50 Telegram Stars"):
         result = await process_transaction(_make_client(), TRANSACTION_DATA)
     assert result == "abc123"
@@ -81,16 +81,25 @@ async def test_insufficient_balance_raises() -> None:
 
 
 @pytest.mark.asyncio
-async def test_exact_minimum_balance_broadcasts() -> None:
-    wallet = _make_wallet(balance_nanotons=500_000_000)  # exactly transaction amount threshold
+async def test_payment_amount_without_fee_reserve_raises() -> None:
+    wallet = _make_wallet(balance_nanotons=500_000_000)  # exactly the 0.5 GRAM payment amount
+    with _patch_wallet(wallet):
+        with pytest.raises(WalletError, match="required"):
+            await process_transaction(_make_client(), TRANSACTION_DATA)
+    wallet.transfer.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_exact_payment_plus_fee_reserve_broadcasts() -> None:
+    wallet = _make_wallet(balance_nanotons=830_000_000)  # 0.5 GRAM payment + 0.33 GRAM reserve
     with _patch_wallet(wallet), patch("pyfragment.services.tonapi.transaction.clean_decode", return_value="50 Telegram Stars"):
         result = await process_transaction(_make_client(), TRANSACTION_DATA)
     assert result == "abc123"
 
 
 @pytest.mark.asyncio
-async def test_one_nanoton_below_minimum_raises() -> None:
-    wallet = _make_wallet(balance_nanotons=499_999_999)  # 1 nanogram below transaction amount threshold
+async def test_one_nanoton_below_payment_plus_fee_reserve_raises() -> None:
+    wallet = _make_wallet(balance_nanotons=829_999_999)
     with _patch_wallet(wallet):
         with pytest.raises(WalletError, match="required"):
             await process_transaction(_make_client(), TRANSACTION_DATA)
