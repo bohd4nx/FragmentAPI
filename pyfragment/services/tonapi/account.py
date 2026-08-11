@@ -55,12 +55,15 @@ async def check_gram_payment_balance(
     amount_gram: float,
     required_payment_amount: float | None,
 ) -> None:
-    """Validate that the GRAM (ex TON) wallet can cover a GRAM (ex TON)-denominated payment."""
+    """Validate that the GRAM (ex TON) wallet can cover the payment and gas reserve."""
     tx_price_gram = amount_gram
     if required_payment_amount is not None and required_payment_amount > 0:
         tx_price_gram = max(tx_price_gram, required_payment_amount)
 
-    required_gram = max(tx_price_gram, MIN_GRAM_BALANCE)
+    # The balance check must leave a GRAM reserve for the network fee. A balance
+    # equal to the payment amount is not sufficient because the transfer itself
+    # also consumes GRAM for storage, gas, and forwarding fees.
+    required_gram = tx_price_gram + MIN_GRAM_BALANCE
     if balance_gram < required_gram:
         logger.error(
             "Failed GRAM (ex TON) balance check: balance=%s GRAM (ex TON), required=%s GRAM (ex TON)",
