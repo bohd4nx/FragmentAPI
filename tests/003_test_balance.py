@@ -42,7 +42,7 @@ def _make_wallet(balance_nanotons: int) -> MagicMock:
     wallet = MagicMock()
     wallet.refresh = AsyncMock()
     wallet.balance = balance_nanotons
-    wallet.transfer = AsyncMock(return_value=MagicMock(normalized_hash="abc123"))
+    wallet.transfer = AsyncMock(return_value=MagicMock(normalized_hash="abc123", as_b64="boc_abc123"))
     return wallet
 
 
@@ -67,7 +67,7 @@ async def test_sufficient_balance_broadcasts() -> None:
     wallet = _make_wallet(balance_nanotons=1_000_000_000)  # 1 GRAM, above threshold
     with _patch_wallet(wallet), patch("pyfragment.services.tonapi.transaction.clean_decode", return_value="50 Telegram Stars"):
         result = await process_transaction(_make_client(), TRANSACTION_DATA)
-    assert result == "abc123"
+    assert result == ("abc123", "boc_abc123")
     wallet.transfer.assert_called_once()
 
 
@@ -85,7 +85,7 @@ async def test_exact_minimum_balance_broadcasts() -> None:
     wallet = _make_wallet(balance_nanotons=500_000_000)  # exactly transaction amount threshold
     with _patch_wallet(wallet), patch("pyfragment.services.tonapi.transaction.clean_decode", return_value="50 Telegram Stars"):
         result = await process_transaction(_make_client(), TRANSACTION_DATA)
-    assert result == "abc123"
+    assert result == ("abc123", "boc_abc123")
 
 
 @pytest.mark.asyncio
@@ -124,10 +124,12 @@ async def test_balance_check_failed_raises_wallet_error() -> None:
 @pytest.mark.asyncio
 async def test_rate_limit_retries_and_succeeds() -> None:
     wallet = _make_wallet(balance_nanotons=1_000_000_000)
-    wallet.transfer = AsyncMock(side_effect=[_provider_error(429, "rate limited"), MagicMock(normalized_hash="abc123")])
+    wallet.transfer = AsyncMock(
+        side_effect=[_provider_error(429, "rate limited"), MagicMock(normalized_hash="abc123", as_b64="boc_abc123")]
+    )
     with _patch_wallet(wallet), patch("pyfragment.services.tonapi.transaction.clean_decode", return_value=""):
         result = await process_transaction(_make_client(), TRANSACTION_DATA)
-    assert result == "abc123"
+    assert result == ("abc123", "boc_abc123")
     assert wallet.transfer.call_count == 2
 
 

@@ -10,7 +10,7 @@ from pyfragment import ConfigurationError, FragmentClient, PremiumGiveawayResult
 from pyfragment.core.constants import PREMIUM_MONTHS_VALID, PREMIUM_WINNERS_MAX, PREMIUM_WINNERS_MIN
 from pyfragment.enums import PaymentMethod
 from pyfragment.exceptions import AlreadySubscribedError
-from tests.shared import FAKE_ACCOUNT, FAKE_RECIPIENT, FAKE_REQ_ID, FAKE_TRANSACTION, FAKE_TX_HASH
+from tests.shared import FAKE_ACCOUNT, FAKE_RECIPIENT, FAKE_REQ_ID, FAKE_TRANSACTION, FAKE_TX_BOC, FAKE_TX_HASH
 
 # Premium purchase validation tests
 
@@ -52,7 +52,7 @@ async def test_purchase_premium_success(client: FragmentClient) -> None:
             ),
         ),
         patch.object(_purchase_premium_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
-        patch.object(_purchase_premium_mod, "process_transaction", AsyncMock(return_value=FAKE_TX_HASH)),
+        patch.object(_purchase_premium_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
     ):
         result = await client.purchase_premium("@user", months=3)
 
@@ -72,7 +72,7 @@ async def test_purchase_premium_passes_payment_method(client: FragmentClient) ->
             FAKE_TRANSACTION,
         ]
     )
-    proc_mock = AsyncMock(return_value=FAKE_TX_HASH)
+    proc_mock = AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))
     with (
         patch.object(client, "call", call_mock),
         patch.object(_purchase_premium_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
@@ -179,7 +179,7 @@ async def test_giveaway_premium_success(client: FragmentClient) -> None:
             ),
         ),
         patch.object(_giveaway_premium_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
-        patch.object(_giveaway_premium_mod, "process_transaction", AsyncMock(return_value=FAKE_TX_HASH)),
+        patch.object(_giveaway_premium_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
     ):
         result = await client.giveaway_premium("@channel", winners=10, months=3)
 
@@ -201,7 +201,7 @@ async def test_giveaway_premium_passes_payment_method(client: FragmentClient) ->
             FAKE_TRANSACTION,
         ]
     )
-    proc_mock = AsyncMock(return_value=FAKE_TX_HASH)
+    proc_mock = AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))
     with (
         patch.object(client, "call", call_mock),
         patch.object(_giveaway_premium_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),

@@ -7,7 +7,7 @@ import pytest
 import pyfragment.domains.ads.recharge as _recharge_ads_mod
 from pyfragment import AdsRechargeResult, ConfigurationError, FragmentClient
 from pyfragment.core.constants import GRAM_TOPUP_MAX, GRAM_TOPUP_MIN
-from tests.shared import FAKE_ACCOUNT, FAKE_ADS_ACCOUNT, FAKE_REQ_ID, FAKE_TRANSACTION, FAKE_TX_HASH
+from tests.shared import FAKE_ACCOUNT, FAKE_ADS_ACCOUNT, FAKE_REQ_ID, FAKE_TRANSACTION, FAKE_TX_BOC, FAKE_TX_HASH
 
 # recharge_ads validation tests
 
@@ -48,7 +48,7 @@ async def test_recharge_ads_success(client: FragmentClient) -> None:
             ),
         ),
         patch.object(_recharge_ads_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
-        patch.object(_recharge_ads_mod, "process_transaction", AsyncMock(return_value=FAKE_TX_HASH)),
+        patch.object(_recharge_ads_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
     ):
         result = await client.recharge_ads(FAKE_ADS_ACCOUNT, amount=10)
 
