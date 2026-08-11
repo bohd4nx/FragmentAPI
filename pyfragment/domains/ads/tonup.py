@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyfragment.core.constants import ADS_TOPUP_PAGE, DEVICE_INFO, GRAM_TOPUP_MAX, GRAM_TOPUP_MIN
 from pyfragment.domains.ads.models import AdsTopupResult
-from pyfragment.domains.payments import cancel_invoice, confirm_purchase, parse_required_payment_amount
+from pyfragment.domains.payments import cancel_invoice, confirm_purchase, is_confirmed, parse_required_payment_amount
 from pyfragment.exceptions import (
     ConfigurationError,
     FragmentAPIError,
@@ -67,8 +67,8 @@ async def topup_gram(client: FragmentClient, username: str, amount: int, show_se
         except Exception:
             await cancel_invoice(client, req_id, ADS_TOPUP_PAGE)
             raise
-        await confirm_purchase(client, account, tx_boc, transaction, "updateAdsTopupState", ADS_TOPUP_PAGE)
-        return AdsTopupResult(transaction_id=tx_hash, username=username, amount=amount)
+        state_response = await confirm_purchase(client, account, tx_boc, transaction, "updateAdsTopupState", ADS_TOPUP_PAGE)
+        return AdsTopupResult(transaction_id=tx_hash, username=username, amount=amount, confirmed=is_confirmed(state_response))
 
     except FragmentError as exc:
         logger.error(

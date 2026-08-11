@@ -83,3 +83,8 @@ async def confirm_purchase(
     except Exception:
         logger.exception("Failed to confirm Fragment purchase via '%s' (dh=%s)", state_method, dh)
         return None
+
+
+def is_confirmed(state_response: dict[str, Any] | None) -> bool:
+    """Whether `confirm_purchase()` got Fragment's definitive done signal, not just a timeout/error."""
+    return state_response is not None and not state_response.get("need_update", True)

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyfragment.core.constants import ADS_TOPUP_PAGE, DEVICE_INFO, GRAM_TOPUP_MAX, GRAM_TOPUP_MIN
 from pyfragment.domains.ads.models import AdsRechargeResult
-from pyfragment.domains.payments import cancel_invoice, confirm_purchase
+from pyfragment.domains.payments import cancel_invoice, confirm_purchase, is_confirmed
 from pyfragment.exceptions import (
     ConfigurationError,
     FragmentAPIError,
@@ -59,8 +59,8 @@ async def recharge_ads(client: FragmentClient, account: str, amount: int) -> Ads
         except Exception:
             await cancel_invoice(client, req_id, ADS_TOPUP_PAGE)
             raise
-        await confirm_purchase(client, account_info, tx_boc, transaction, "updateAdsState", ADS_TOPUP_PAGE)
-        return AdsRechargeResult(transaction_id=tx_hash, amount=amount)
+        state_response = await confirm_purchase(client, account_info, tx_boc, transaction, "updateAdsState", ADS_TOPUP_PAGE)
+        return AdsRechargeResult(transaction_id=tx_hash, amount=amount, confirmed=is_confirmed(state_response))
 
     except FragmentError as exc:
         logger.error("Failed to recharge Ads account '%s' for %s GRAM (ex TON): %s", account, amount, exc, exc_info=True)

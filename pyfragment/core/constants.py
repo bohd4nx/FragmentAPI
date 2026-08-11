@@ -47,7 +47,7 @@ USDT_GRAM_MASTER_ADDRESS: str = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sD
 DEVICE_INFO: dict[str, Any] = {
     "platform": "iphone",
     "appName": "Tonkeeper",
-    "appVersion": "26.05.0",
+    "appVersion": "26.07.1",
     "maxProtocolVersion": 2,
     "features": [
         "SendTransaction",

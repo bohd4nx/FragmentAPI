@@ -12,7 +12,13 @@ from pyfragment.core.constants import (
     STARS_PURCHASE_MAX,
     STARS_PURCHASE_MIN,
 )
-from pyfragment.domains.payments import cancel_invoice, confirm_purchase, parse_required_payment_amount, state_nonce
+from pyfragment.domains.payments import (
+    cancel_invoice,
+    confirm_purchase,
+    is_confirmed,
+    parse_required_payment_amount,
+    state_nonce,
+)
 from pyfragment.domains.purchases.models import PremiumResult, StarsResult
 from pyfragment.enums import PaymentMethod
 from pyfragment.exceptions import (
@@ -103,8 +109,8 @@ async def purchase_stars(
         except Exception:
             await cancel_invoice(client, req_id, STARS_PAGE)
             raise
-        await confirm_purchase(client, account, tx_boc, transaction, "updateStarsBuyState", STARS_PAGE)
-        return StarsResult(transaction_id=tx_hash, username=username, amount=amount)
+        state_response = await confirm_purchase(client, account, tx_boc, transaction, "updateStarsBuyState", STARS_PAGE)
+        return StarsResult(transaction_id=tx_hash, username=username, amount=amount, confirmed=is_confirmed(state_response))
 
     except FragmentError as exc:
         logger.error(
@@ -197,8 +203,8 @@ async def purchase_premium(
         except Exception:
             await cancel_invoice(client, req_id, PREMIUM_PAGE)
             raise
-        await confirm_purchase(client, account, tx_boc, transaction, "updatePremiumState", PREMIUM_PAGE)
-        return PremiumResult(transaction_id=tx_hash, username=username, amount=months)
+        state_response = await confirm_purchase(client, account, tx_boc, transaction, "updatePremiumState", PREMIUM_PAGE)
+        return PremiumResult(transaction_id=tx_hash, username=username, amount=months, confirmed=is_confirmed(state_response))
 
     except FragmentError as exc:
         logger.error(

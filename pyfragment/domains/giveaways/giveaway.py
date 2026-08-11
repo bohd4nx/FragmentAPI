@@ -17,7 +17,13 @@ from pyfragment.core.constants import (
     STARS_WINNERS_MIN,
 )
 from pyfragment.domains.giveaways.models import PremiumGiveawayResult, StarsGiveawayResult
-from pyfragment.domains.payments import cancel_invoice, confirm_purchase, parse_required_payment_amount, state_nonce
+from pyfragment.domains.payments import (
+    cancel_invoice,
+    confirm_purchase,
+    is_confirmed,
+    parse_required_payment_amount,
+    state_nonce,
+)
 from pyfragment.enums import PaymentMethod
 from pyfragment.exceptions import (
     ConfigurationError,
@@ -116,8 +122,12 @@ async def giveaway_stars(
         except Exception:
             await cancel_invoice(client, req_id, STARS_GIVEAWAY_PAGE)
             raise
-        await confirm_purchase(client, account, tx_boc, transaction, "updateStarsGiveawayState", STARS_GIVEAWAY_PAGE)
-        return StarsGiveawayResult(transaction_id=tx_hash, channel=channel, winners=winners, amount=amount)
+        state_response = await confirm_purchase(
+            client, account, tx_boc, transaction, "updateStarsGiveawayState", STARS_GIVEAWAY_PAGE
+        )
+        return StarsGiveawayResult(
+            transaction_id=tx_hash, channel=channel, winners=winners, amount=amount, confirmed=is_confirmed(state_response)
+        )
 
     except FragmentError as exc:
         logger.error(
@@ -228,8 +238,12 @@ async def giveaway_premium(
         except Exception:
             await cancel_invoice(client, req_id, PREMIUM_GIVEAWAY_PAGE)
             raise
-        await confirm_purchase(client, account, tx_boc, transaction, "updatePremiumGiveawayState", PREMIUM_GIVEAWAY_PAGE)
-        return PremiumGiveawayResult(transaction_id=tx_hash, channel=channel, winners=winners, amount=months)
+        state_response = await confirm_purchase(
+            client, account, tx_boc, transaction, "updatePremiumGiveawayState", PREMIUM_GIVEAWAY_PAGE
+        )
+        return PremiumGiveawayResult(
+            transaction_id=tx_hash, channel=channel, winners=winners, amount=months, confirmed=is_confirmed(state_response)
+        )
 
     except FragmentError as exc:
         logger.error(
