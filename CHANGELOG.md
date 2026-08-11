@@ -170,6 +170,7 @@ The TON blockchain has been rebranded to **GRAM (ex TON)**. All identifiers, mes
 - `get_cookies_from_browser(browser)` — extract Fragment session cookies directly from an installed browser (Chrome, Firefox, Edge, Brave, Arc, Opera, Safari, and more); no browser extension or manual copy-paste required
   ```python
   from pyfragment import get_cookies_from_browser
+
   result = get_cookies_from_browser("chrome")  # or "firefox", "edge", "brave", ...
   client = FragmentClient(seed="...", api_key="...", cookies=result.cookies)
   print(result.expires)  # ISO 8601 expiry of stel_ssid, or None for session cookies
