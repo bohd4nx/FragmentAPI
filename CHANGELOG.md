@@ -7,6 +7,12 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Isolated `FragmentClient` headers from the global `BASE_HEADERS` dictionary so changes to one client no longer affect other clients.
+
 ## [2026.3.2] — 2026-06-16
 
 ### Added
@@ -111,7 +117,7 @@ The TON blockchain has been rebranded to **GRAM (ex TON)**. All identifiers, mes
 
 ### Note
 
-- USDT (`usdt_ton`) payments require USDT to be held in the TON wallet that is linked to your Fragment account profile. The seed wallet configured in `FragmentClient` is only used to sign transactions and pay TON network fees.
+- USDT (`usdt_ton`) payments require USDT to be held in the TON wallet that is linked to your Fragment account profile. The seed wallet configured in `FragmentClient` is only used to sign the transaction and pay TON network fees.
 
 ---
 
@@ -209,7 +215,7 @@ The TON blockchain has been rebranded to **GRAM (ex TON)**. All identifiers, mes
 **Anonymous numbers**
 
 - `get_login_code(number)` — fetch the current pending login code
-- `toggle_login_codes(number, can_receive)` — enable or disable login code delivery
+- `toggle_login_codes(number, can_receive)` — enable or disable login code delivery for an anonymous number
 - `terminate_sessions(number)` — terminate all active Telegram sessions (two-step flow handled internally)
 - `LoginCodeResult`, `TerminateSessionsResult` result types; `AnonymousNumberError` exception
 
