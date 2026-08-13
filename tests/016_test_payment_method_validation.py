@@ -21,9 +21,20 @@ async def test_purchase_stars_rejects_unsupported_payment_method_before_api_call
     payment_method: PaymentMethod,
 ) -> None:
     client = MagicMock()
-    client.call = AsyncMock()
+    client.call = AsyncMock(
+        side_effect=[
+            {"found": {"recipient": "recipient"}},
+            {},
+            {"req_id": "request", "amount": "1"},
+            {"need_verify": False},
+        ]
+    )
 
-    with pytest.raises(ConfigurationError):
+    with (
+        patch("pyfragment.domains.purchases.purchase.get_account_info", AsyncMock(return_value={})),
+        patch("pyfragment.domains.purchases.purchase.process_transaction", AsyncMock(return_value="tx")),
+        pytest.raises(ConfigurationError),
+    ):
         await purchase_stars(client, "@user", amount=500, payment_method=payment_method)
 
     client.call.assert_not_awaited()
@@ -35,9 +46,20 @@ async def test_purchase_premium_rejects_unsupported_payment_method_before_api_ca
     payment_method: PaymentMethod,
 ) -> None:
     client = MagicMock()
-    client.call = AsyncMock()
+    client.call = AsyncMock(
+        side_effect=[
+            {"found": {"recipient": "recipient"}},
+            {},
+            {"req_id": "request", "amount": "1"},
+            {"need_verify": False},
+        ]
+    )
 
-    with pytest.raises(ConfigurationError):
+    with (
+        patch("pyfragment.domains.purchases.purchase.get_account_info", AsyncMock(return_value={})),
+        patch("pyfragment.domains.purchases.purchase.process_transaction", AsyncMock(return_value="tx")),
+        pytest.raises(ConfigurationError),
+    ):
         await purchase_premium(client, "@user", months=3, payment_method=payment_method)
 
     client.call.assert_not_awaited()
@@ -45,9 +67,7 @@ async def test_purchase_premium_rejects_unsupported_payment_method_before_api_ca
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("payment_method", (PaymentMethod.GRAM, PaymentMethod.USDT_GRAM))
-async def test_supported_payment_methods_are_accepted(
-    payment_method: PaymentMethod,
-) -> None:
+async def test_supported_payment_methods_remain_accepted(payment_method: PaymentMethod) -> None:
     client = MagicMock()
     client.call = AsyncMock(
         side_effect=[
