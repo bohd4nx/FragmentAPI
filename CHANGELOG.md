@@ -7,6 +7,12 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Transaction balance validation now reserves GRAM for network fees instead of allowing a payment to consume the entire available balance.
+
 ## [2026.3.2] — 2026-06-16
 
 ### Added
