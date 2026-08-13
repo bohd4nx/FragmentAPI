@@ -83,7 +83,7 @@ class FragmentClient:
         self.cookies: dict[str, Any] = parsed_cookies
         self.wallet_version: WalletVersion = version
         self.timeout: float = timeout
-        self.headers: dict[str, str] = headers if headers is not None else BASE_HEADERS
+        self.headers: dict[str, str] = dict(headers) if headers is not None else dict(BASE_HEADERS)
         self.marketplace = MarketplaceService(self)
         self.purchases = PurchasesService(self)
         self.giveaways = GiveawaysService(self)
@@ -279,8 +279,8 @@ class FragmentClient:
 
         Args:
             query: Search text. Omit or pass ``""`` to browse all.
-            sort: ``"price_desc"``, ``"price_asc"``, ``"listed"``, or ``"ending"``.
-            filter: ``"auction"``, ``"sale"``, ``"sold"``, or ``""`` (available).
+            sort: ``"price_desc"`, ``"price_asc"`, ``"listed"`, or ``"ending"``.
+            filter: ``"auction"``, ``"sale"`, ``"sold"`, or ``""`` (available).
             offset_id: Pass :attr:`NumbersResult.next_offset_id` to fetch the next page.
 
         Returns:
@@ -303,8 +303,8 @@ class FragmentClient:
         Args:
             query: Search text. Omit or pass ``""`` to browse all.
             collection: Gift collection slug (e.g. ``"artisanbrick"``).
-            sort: ``"price_desc"``, ``"price_asc"``, ``"listed"``, or ``"ending"``.
-            filter: ``"auction"``, ``"sale"``, ``"sold"``, or ``""`` (available).
+            sort: ``"price_desc"``, ``"price_asc"`, ``"listed"`, or ``"ending"``.
+            filter: ``"auction"``, ``"sale"`, ``"sold"`, or ``""`` (available).
             view: Active attribute tab name (e.g. ``"Model"``).
             attr: Attribute filters — e.g. ``{"Model": ["Foosball"], "Backdrop": ["Celtic Blue"]}``.
             offset: Pass :attr:`GiftsResult.next_offset` to fetch the next page.
