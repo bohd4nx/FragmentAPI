@@ -7,6 +7,12 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed the `Referer` header derived from the root Fragment URL (`https://fragment.com`).
+
 ## [2026.3.2] — 2026-06-16
 
 ### Added
@@ -94,7 +100,7 @@ The TON blockchain has been rebranded to **GRAM (ex TON)**. All identifiers, mes
   - TON account and balance helpers are now unified under `pyfragment.domains.tonapi.account`
   - service wrappers and operation modules are aligned by domain (`ads`, `purchases`, `giveaways`, `anonymous_numbers`, `marketplace`, `tonapi`)
 - Package exports were cleaned up for domain and model packages (`__init__.py`) to provide clearer public symbols.
-- Examples and system tests were updated to follow current public import paths and project structure.
+- Examples and system tests were updated to follow current public import paths and structure.
 
 ### Fixed
 

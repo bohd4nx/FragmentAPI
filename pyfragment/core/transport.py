@@ -4,11 +4,20 @@ import asyncio
 import random
 import re
 from typing import Any, cast
+from urllib.parse import urlsplit, urlunsplit
 
 from curl_cffi.requests import AsyncSession, Response
 
 from pyfragment.core.constants import FRAGMENT_BASE_URL
 from pyfragment.exceptions import FragmentPageError, ParseError
+
+
+def _parent_url(page_url: str) -> str:
+    """Return the parent page URL used as Fragment's Referer."""
+    parsed = urlsplit(page_url)
+    if parsed.path in ("", "/"):
+        return urlunsplit((parsed.scheme, parsed.netloc, "", "", ""))
+    return page_url.rsplit("/", 1)[0]
 
 
 async def get_fragment_hash(
@@ -17,7 +26,7 @@ async def get_fragment_hash(
     page_url: str,
 ) -> str:
     # Derive the natural referer: strip the last path segment (e.g. /stars/buy → /stars)
-    parent_url = page_url.rsplit("/", 1)[0] or FRAGMENT_BASE_URL
+    parent_url = _parent_url(page_url) or FRAGMENT_BASE_URL
 
     page_headers = {k: v for k, v in headers.items() if k not in ("content-type", "origin")}
     page_headers["referer"] = parent_url
