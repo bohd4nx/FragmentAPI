@@ -9,6 +9,10 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 
 ## [Unreleased]
 
+---
+
+## [2026.3.4] — 2026-08-14
+
 ### Added
 
 - `StarsResult`, `PremiumResult`, `AdsTopupResult`, `AdsRechargeResult`, `StarsGiveawayResult`, and `PremiumGiveawayResult` now carry a `confirmed: bool` field, reflecting whether Fragment's own backend acknowledged the broadcast transaction. `transaction_id` is still set as soon as the transfer is broadcast — `confirmed` is a separate, best-effort signal.
