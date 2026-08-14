@@ -120,14 +120,19 @@ async def search_gifts(
         for trait, values in attr.items():
             data[f"attr[{trait}]"] = values
     if offset is not None:
-        data["offset"] = offset
+        data["offset_id"] = offset
 
     try:
         result = await client.call("searchAuctions", data, page_url=GIFTS_PAGE)
         if result.get("error"):
             raise FragmentAPIError(result["error"])
 
-        items, next_offset = parse_gift_items(result.get("html") or "")
+        # Paginated (offset) responses come back as {"part": true, "body": ..., "foot": ...}
+        # instead of a single "html" field - stitch them together before parsing.
+        html = result.get("html")
+        if html is None:
+            html = (result.get("body") or "") + (result.get("foot") or "")
+        items, next_offset = parse_gift_items(html)
         return GiftsResult(items=items, next_offset=next_offset)
 
     except FragmentError as exc:
