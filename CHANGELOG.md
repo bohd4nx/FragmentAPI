@@ -29,6 +29,9 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 - `search_gifts()` pagination was broken: Fragment expects the next page's cursor as `offset_id`, not `offset`, and answers with `{"part": true, "body": ..., "foot": ...}` instead of a single `"html"` field — the parser now handles both request and response shapes correctly.
 - `parse_required_payment_amount()` failed to parse Fragment-formatted amounts with thousand separators (e.g. `"1,000,000,000"`), silently disabling the pre-broadcast balance check for large Ads top-ups.
 - Stars/Premium/giveaway/Ads init requests that fail without a `req_id` now raise Fragment's actual error message (e.g. `"Amount is invalid"`) instead of a generic "no request ID" error.
+- `search_gifts()`'s `attr` filter was sent as Python's `str(list)` (e.g. `"['Sweet Glaze']"`) instead of a JSON array, which Fragment doesn't understand — now serialized with `json.dumps()`.
+- `search_usernames()`/`search_numbers()` pagination never worked: Fragment doesn't return a `next_offset_id` JSON field, the cursor lives in the HTML as `data-next-offset`, and paginated responses use the same `{"part": true, "body": ..., "foot": ...}` shape as gift search — both are now parsed correctly.
+- `parse_auction_rows()` returned `date: None` for sold/plain listings, since their `<time>` tag has no `data-relative` attribute (only active-auction countdowns do) — now falls back to a plain `<time datetime="...">` match.
 
 ---
 
