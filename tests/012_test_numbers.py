@@ -65,14 +65,28 @@ async def test_search_numbers_with_sort_and_filter(client: FragmentClient) -> No
 
 @pytest.mark.asyncio
 async def test_search_numbers_with_offset_id(client: FragmentClient) -> None:
-    mock_call = AsyncMock(return_value={"ok": True, "html": FAKE_HTML, "next_offset_id": "offset_50"})
+    html_with_next_page = FAKE_HTML + '<a class="js-load-more" data-next-offset="300">Show more</a>'
+    mock_call = AsyncMock(return_value={"ok": True, "html": html_with_next_page})
     with patch.object(client, "call", mock_call):
         result = await client.search_numbers("888", offset_id="offset_50")
 
     assert isinstance(result, NumbersResult)
-    assert result.next_offset_id == "offset_50"
+    assert result.next_offset_id == "300"
     call_data = mock_call.call_args[0][1]
     assert call_data["offset_id"] == "offset_50"
+
+
+@pytest.mark.asyncio
+async def test_search_numbers_paginated_response_shape(client: FragmentClient) -> None:
+    # Fragment answers offset_id requests with {"part": true, "body": ..., "foot": ...}
+    # instead of a single "html" field.
+    foot = '<a class="js-load-more" data-next-offset="300">Show more</a>'
+    with patch.object(client, "call", AsyncMock(return_value={"ok": True, "part": True, "body": FAKE_HTML, "foot": foot})):
+        result = await client.search_numbers("888", offset_id="offset_50")
+
+    assert isinstance(result, NumbersResult)
+    assert len(result.items) == 1
+    assert result.next_offset_id == "300"
 
 
 @pytest.mark.asyncio

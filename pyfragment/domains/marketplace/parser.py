@@ -9,7 +9,10 @@ VALUE_RE = re.compile(r'class="[^"]*tm-value[^"]*"[^>]*>\s*([^<]+?)\s*<')
 PRICE_RE = re.compile(r"icon-before\s+icon-ton[^>]*>\s*([0-9][^<]*?)\s*<")
 DATETIME_RE = re.compile(r'<time[^>]+datetime="([^"]+)"[^>]*data-relative="text"[^>]*>')
 DATETIME_SHORT_RE = re.compile(r'<time[^>]+datetime="([^"]+)"[^>]*data-relative="short-text"[^>]*>')
+# Sold/plain listings render a bare <time> with no data-relative attribute at all.
+DATETIME_PLAIN_RE = re.compile(r'<time[^>]+datetime="([^"]+)"[^>]*>')
 NUMERIC_RE = re.compile(r"^\+?[\d,. ]+$")
+NEXT_OFFSET_RE = re.compile(r'data-next-offset="(\d+)"')
 
 GRID_ITEM_RE = re.compile(r'<a\b[^>]*class="[^"]*tm-grid-item[^"]*"[^>]*>(.*?)</a>', re.DOTALL)
 GRID_HREF_RE = re.compile(r'href="(/gift/([^?"]+))')
@@ -20,7 +23,7 @@ GRID_STATUS_RE = re.compile(r'class="[^"]*tm-grid-item-status[^"]*"[^>]*>\s*([^<
 GRID_DATETIME_RE = re.compile(r'<time[^>]+datetime="([^"]+)"')
 
 
-def parse_auction_rows(html: str) -> list[dict[str, Any]]:
+def parse_auction_rows(html: str) -> tuple[list[dict[str, Any]], str | None]:
     items: list[dict[str, Any]] = []
     for row_match in ROW_BLOCK_RE.finditer(html):
         row = row_match.group(1)
@@ -48,12 +51,17 @@ def parse_auction_rows(html: str) -> list[dict[str, Any]]:
             except ValueError:
                 price = raw_price
 
-        time_m = DATETIME_RE.search(row) or DATETIME_SHORT_RE.search(row)
+        # Prefer the auction countdown timestamp; fall back to the plain sold/listed date,
+        # which Fragment renders without a data-relative attribute.
+        time_m = DATETIME_RE.search(row) or DATETIME_SHORT_RE.search(row) or DATETIME_PLAIN_RE.search(row)
         date: str | None = time_m.group(1) if time_m else None
 
         items.append({"slug": slug, "name": name, "status": status, "price": price, "date": date})
 
-    return items
+    next_offset_m = NEXT_OFFSET_RE.search(html)
+    next_offset_id = next_offset_m.group(1) if next_offset_m else None
+
+    return items, next_offset_id
 
 
 def parse_gift_items(html: str) -> tuple[list[dict[str, Any]], int | None]:
@@ -89,7 +97,7 @@ def parse_gift_items(html: str) -> tuple[list[dict[str, Any]], int | None]:
 
         items.append({"slug": slug, "name": name, "status": status, "price": price, "date": date})
 
-    next_offset_m = re.search(r'data-next-offset="(\d+)"', html)
+    next_offset_m = NEXT_OFFSET_RE.search(html)
     next_offset = int(next_offset_m.group(1)) if next_offset_m else None
 
     return items, next_offset

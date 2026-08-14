@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -35,9 +36,12 @@ async def search_usernames(
         if result.get("error"):
             raise FragmentAPIError(result["error"])
 
-        items = parse_auction_rows(result.get("html") or "")
-        raw_noi = result.get("next_offset_id")
-        next_offset_id = str(raw_noi) if raw_noi else None
+        # Paginated (offset_id) responses come back as {"part": true, "body": ..., "foot": ...}
+        # instead of a single "html" field - stitch them together before parsing.
+        html = result.get("html")
+        if html is None:
+            html = (result.get("body") or "") + (result.get("foot") or "")
+        items, next_offset_id = parse_auction_rows(html)
         return UsernamesResult(items=items, next_offset_id=next_offset_id)
 
     except FragmentError as exc:
