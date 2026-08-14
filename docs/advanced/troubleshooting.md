@@ -8,7 +8,7 @@ Symptoms:
 
 - Fragment page hash cannot be extracted,
 - bad status loading Fragment pages,
-- missing request IDs.
+- missing request IDs with no further detail.
 
 Actions:
 
@@ -17,7 +17,9 @@ Actions:
 - ensure all `stel_*` keys are present.
 - verify constructor payload in [Library and Configuration](../getting-started/configuration.md).
 
-**Re-login + fresh cookies solves the majority of auth errors.**
+**Re-login + fresh cookies solves the majority of auth errors.** If Fragment returned a specific reason (e.g.
+`"Amount is invalid"`), the exception message is that reason directly — that's a request validation error, not a
+session problem, so re-logging in won't help; check the amount/recipient instead.
 
 ## Cookie extraction errors
 

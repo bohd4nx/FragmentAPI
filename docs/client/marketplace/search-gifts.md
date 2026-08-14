@@ -48,9 +48,8 @@ Common values accepted by Fragment:
 
 ## Attribute filter format
 
-`attr` is encoded into request fields in this form:
-
-- `attr[trait_name] = ["value1", "value2"]`
+Each trait is sent as `attr[trait]`, JSON-encoded (`'["value1", "value2"]'`) — this is the exact format Fragment's
+own frontend uses.
 
 Example:
 
@@ -60,8 +59,6 @@ attr={
     "rarity": ["rare"],
 }
 ```
-
-In requests, each trait is sent as `attr[trait]` with a list of values.
 
 ## Return type
 
