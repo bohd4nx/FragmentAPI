@@ -26,6 +26,9 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 - Fixed the request hash extraction regex in `get_fragment_hash()` to correctly match Fragment's HTML.
 - Removed the dead `x-aj-referer` header, not present in Fragment's actual traffic.
 - Excluded `*.md` from `ruff format` so CI doesn't fail whenever a `ruff` release changes how it formats Python code fences in `CHANGELOG.md`/`README.md` (`ruff` isn't pinned in dev deps).
+- `search_gifts()` pagination was broken: Fragment expects the next page's cursor as `offset_id`, not `offset`, and answers with `{"part": true, "body": ..., "foot": ...}` instead of a single `"html"` field — the parser now handles both request and response shapes correctly.
+- `parse_required_payment_amount()` failed to parse Fragment-formatted amounts with thousand separators (e.g. `"1,000,000,000"`), silently disabling the pre-broadcast balance check for large Ads top-ups.
+- Stars/Premium/giveaway/Ads init requests that fail without a `req_id` now raise Fragment's actual error message (e.g. `"Amount is invalid"`) instead of a generic "no request ID" error.
 
 ---
 
