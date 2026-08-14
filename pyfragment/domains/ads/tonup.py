@@ -42,6 +42,8 @@ async def topup_gram(client: FragmentClient, username: str, amount: int, show_se
         required_payment_amount = parse_required_payment_amount(result)
         req_id = result.get("req_id")
         if not req_id:
+            if result.get("error"):
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="GRAM (ex TON) topup"))
 
         try:

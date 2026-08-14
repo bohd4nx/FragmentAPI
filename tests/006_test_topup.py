@@ -101,6 +101,28 @@ async def test_topup_gram_missing_req_id_raises(client: FragmentClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_topup_gram_missing_req_id_surfaces_fragment_error(client: FragmentClient) -> None:
+    from pyfragment.exceptions import FragmentAPIError
+
+    with (
+        patch.object(
+            client,
+            "call",
+            AsyncMock(
+                side_effect=[
+                    {},  # updateAdsTopupState
+                    {"found": {"recipient": FAKE_RECIPIENT}},
+                    {"error": "Amount is invalid"},  # initAdsTopupRequest — no req_id
+                ]
+            ),
+        ),
+        patch.object(_topup_gram_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
+    ):
+        with pytest.raises(FragmentAPIError, match="Amount is invalid"):
+            await client.topup_gram("@user", amount=10)
+
+
+@pytest.mark.asyncio
 async def test_topup_gram_need_verify_raises(client: FragmentClient) -> None:
     from pyfragment.exceptions import VerificationError
 

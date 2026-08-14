@@ -35,6 +35,8 @@ async def recharge_ads(client: FragmentClient, account: str, amount: int) -> Ads
         result = await client.call("initAdsRechargeRequest", {"account": account, "amount": amount}, page_url=ADS_TOPUP_PAGE)
         req_id = result.get("req_id")
         if not req_id:
+            if result.get("error"):
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="Ads recharge"))
 
         try:

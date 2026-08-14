@@ -93,6 +93,8 @@ async def giveaway_stars(
         required_payment_amount = parse_required_payment_amount(result)
         req_id = result.get("req_id")
         if not req_id:
+            if result.get("error"):
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="Stars giveaway"))
 
         try:
@@ -209,6 +211,8 @@ async def giveaway_premium(
         required_payment_amount = parse_required_payment_amount(result)
         req_id = result.get("req_id")
         if not req_id:
+            if result.get("error"):
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="Premium giveaway"))
 
         try:

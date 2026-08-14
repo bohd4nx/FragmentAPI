@@ -79,6 +79,8 @@ async def purchase_stars(
         required_payment_amount = parse_required_payment_amount(result)
         req_id = result.get("req_id")
         if not req_id:
+            if result.get("error"):
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="Stars purchase"))
 
         try:
@@ -173,6 +175,8 @@ async def purchase_premium(
         required_payment_amount = parse_required_payment_amount(result)
         req_id = result.get("req_id")
         if not req_id:
+            if error_text:
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="Premium purchase"))
 
         try:
