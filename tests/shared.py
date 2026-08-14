@@ -23,6 +23,7 @@ FAKE_HASH: str = "abc123"
 FAKE_RECIPIENT: str = "recipient_token"
 FAKE_REQ_ID: str = "req_42"
 FAKE_TX_HASH: str = "deadbeef" * 8
+FAKE_TX_BOC: str = "te6ccgEBAQEAAgAAAA=="
 FAKE_ACCOUNT: dict[str, Any] = {"address": "0:abc", "publicKey": "pub", "chain": "-239", "walletStateInit": "base64=="}
 FAKE_TRANSACTION: dict[str, Any] = {"transaction": {"messages": [{"address": "0:abc", "amount": "100000000", "payload": ""}]}}
 

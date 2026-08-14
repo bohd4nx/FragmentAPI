@@ -13,19 +13,14 @@ from pyfragment.exceptions import FragmentPageError, ParseError
 
 async def get_fragment_hash(
     session: AsyncSession[Any],
-    headers: dict[str, str],
     page_url: str,
 ) -> str:
     # Derive the natural referer: strip the last path segment (e.g. /stars/buy → /stars)
     parent_url = page_url.rsplit("/", 1)[0] or FRAGMENT_BASE_URL
 
-    page_headers = {k: v for k, v in headers.items() if k not in ("content-type", "origin")}
-    page_headers["referer"] = parent_url
-    page_headers["x-aj-referer"] = parent_url
-    page_headers.pop("x-aj-referer", None)
-    page_headers.pop("x-requested-with", None)
-
-    response = await session.get(page_url, headers=page_headers)
+    # This is a plain page load, not an XHR call — leave Accept/Sec-Fetch-*/UA/etc. to
+    # curl_cffi's impersonate="chrome" defaults, which already look like a real navigation.
+    response = await session.get(page_url, headers={"referer": parent_url})
 
     if response.status_code != 200:
         raise FragmentPageError(FragmentPageError.BAD_STATUS.format(status=response.status_code, url=page_url))
@@ -47,7 +42,7 @@ def parse_json_response(response: Response, context: str) -> dict[str, Any]:
 async def fragment_request(
     session: AsyncSession[Any],
     fragment_hash: str,
-    headers: dict[str, str],
+    headers: dict[str, str | None],
     data: dict[str, Any],
 ) -> dict[str, Any]:
     for attempt in range(3):

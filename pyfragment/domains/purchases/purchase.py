@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import random
 from typing import TYPE_CHECKING
 
 from pyfragment.core.constants import (
@@ -13,7 +12,13 @@ from pyfragment.core.constants import (
     STARS_PURCHASE_MAX,
     STARS_PURCHASE_MIN,
 )
-from pyfragment.domains.payments import parse_required_payment_amount
+from pyfragment.domains.payments import (
+    cancel_invoice,
+    confirm_purchase,
+    is_confirmed,
+    parse_required_payment_amount,
+    state_nonce,
+)
 from pyfragment.domains.purchases.models import PremiumResult, StarsResult
 from pyfragment.enums import PaymentMethod
 from pyfragment.exceptions import (
@@ -21,6 +26,7 @@ from pyfragment.exceptions import (
     ConfigurationError,
     FragmentAPIError,
     FragmentError,
+    TransactionError,
     UnexpectedError,
     UserNotFoundError,
     VerificationError,
@@ -33,11 +39,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
-
-
-def _state_nonce() -> str:
-    # Fragment accepts a pseudo-random request nonce in state update methods.
-    return str(random.randint(100_000_000, 2_147_483_647))
 
 
 async def purchase_stars(
@@ -67,7 +68,7 @@ async def purchase_stars(
 
         await client.call(
             "updateStarsBuyState",
-            {"mode": "new", "lv": "false", "dh": _state_nonce()},
+            {"mode": "new", "lv": "false", "dh": state_nonce()},
             page_url=STARS_PAGE,
         )
         result = await client.call(
@@ -78,30 +79,40 @@ async def purchase_stars(
         required_payment_amount = parse_required_payment_amount(result)
         req_id = result.get("req_id")
         if not req_id:
+            if result.get("error"):
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="Stars purchase"))
 
-        account = await get_account_info(client)
-        transaction = await client.call(
-            "getBuyStarsLink",
-            {
-                "account": json.dumps(account),
-                "device": json.dumps(DEVICE_INFO),
-                "transaction": 1,
-                "id": req_id,
-                "show_sender": int(show_sender),
-            },
-            page_url=STARS_PAGE,
-        )
-        if transaction.get("need_verify"):
-            raise VerificationError(VerificationError.KYC_REQUIRED)
+        try:
+            account = await get_account_info(client)
+            transaction = await client.call(
+                "getBuyStarsLink",
+                {
+                    "account": json.dumps(account),
+                    "device": json.dumps(DEVICE_INFO),
+                    "transaction": 1,
+                    "id": req_id,
+                    "show_sender": int(show_sender),
+                },
+                page_url=STARS_PAGE,
+            )
+            if transaction.get("need_verify"):
+                raise VerificationError(VerificationError.KYC_REQUIRED)
 
-        tx_hash = await process_transaction(
-            client,
-            transaction,
-            payment_method=payment_method,
-            required_payment_amount=required_payment_amount,
-        )
-        return StarsResult(transaction_id=tx_hash, username=username, amount=amount)
+            tx_hash, tx_boc = await process_transaction(
+                client,
+                transaction,
+                payment_method=payment_method,
+                required_payment_amount=required_payment_amount,
+            )
+        except TransactionError:
+            # The broadcast itself may or may not have reached the chain; leave the invoice alone.
+            raise
+        except Exception:
+            await cancel_invoice(client, req_id, STARS_PAGE)
+            raise
+        state_response = await confirm_purchase(client, account, tx_boc, transaction, "updateStarsBuyState", STARS_PAGE)
+        return StarsResult(transaction_id=tx_hash, username=username, amount=amount, confirmed=is_confirmed(state_response))
 
     except FragmentError as exc:
         logger.error(
@@ -150,7 +161,7 @@ async def purchase_premium(
 
         await client.call(
             "updatePremiumState",
-            {"mode": "new", "lv": "false", "dh": _state_nonce()},
+            {"mode": "new", "lv": "false", "dh": state_nonce()},
             page_url=PREMIUM_PAGE,
         )
         result = await client.call(
@@ -164,30 +175,40 @@ async def purchase_premium(
         required_payment_amount = parse_required_payment_amount(result)
         req_id = result.get("req_id")
         if not req_id:
+            if error_text:
+                raise FragmentAPIError(str(result["error"]))
             raise FragmentAPIError(FragmentAPIError.NO_REQUEST_ID.format(context="Premium purchase"))
 
-        account = await get_account_info(client)
-        transaction = await client.call(
-            "getGiftPremiumLink",
-            {
-                "account": json.dumps(account),
-                "device": json.dumps(DEVICE_INFO),
-                "transaction": 1,
-                "id": req_id,
-                "show_sender": int(show_sender),
-            },
-            page_url=PREMIUM_PAGE,
-        )
-        if transaction.get("need_verify"):
-            raise VerificationError(VerificationError.KYC_REQUIRED)
+        try:
+            account = await get_account_info(client)
+            transaction = await client.call(
+                "getGiftPremiumLink",
+                {
+                    "account": json.dumps(account),
+                    "device": json.dumps(DEVICE_INFO),
+                    "transaction": 1,
+                    "id": req_id,
+                    "show_sender": int(show_sender),
+                },
+                page_url=PREMIUM_PAGE,
+            )
+            if transaction.get("need_verify"):
+                raise VerificationError(VerificationError.KYC_REQUIRED)
 
-        tx_hash = await process_transaction(
-            client,
-            transaction,
-            payment_method=payment_method,
-            required_payment_amount=required_payment_amount,
-        )
-        return PremiumResult(transaction_id=tx_hash, username=username, amount=months)
+            tx_hash, tx_boc = await process_transaction(
+                client,
+                transaction,
+                payment_method=payment_method,
+                required_payment_amount=required_payment_amount,
+            )
+        except TransactionError:
+            # The broadcast itself may or may not have reached the chain; leave the invoice alone.
+            raise
+        except Exception:
+            await cancel_invoice(client, req_id, PREMIUM_PAGE)
+            raise
+        state_response = await confirm_purchase(client, account, tx_boc, transaction, "updatePremiumState", PREMIUM_PAGE)
+        return PremiumResult(transaction_id=tx_hash, username=username, amount=months, confirmed=is_confirmed(state_response))
 
     except FragmentError as exc:
         logger.error(

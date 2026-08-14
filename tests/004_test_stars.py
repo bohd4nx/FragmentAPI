@@ -16,7 +16,7 @@ from pyfragment.core.constants import (
     STARS_WINNERS_MIN,
 )
 from pyfragment.enums import PaymentMethod
-from tests.shared import FAKE_ACCOUNT, FAKE_RECIPIENT, FAKE_REQ_ID, FAKE_TRANSACTION, FAKE_TX_HASH
+from tests.shared import FAKE_ACCOUNT, FAKE_RECIPIENT, FAKE_REQ_ID, FAKE_TRANSACTION, FAKE_TX_BOC, FAKE_TX_HASH
 
 # Stars purchase validation tests
 
@@ -61,7 +61,7 @@ async def test_purchase_stars_success(client: FragmentClient) -> None:
     with (
         patch.object(client, "call", call_mock),
         patch.object(_purchase_stars_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
-        patch.object(_purchase_stars_mod, "process_transaction", AsyncMock(return_value=FAKE_TX_HASH)),
+        patch.object(_purchase_stars_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
     ):
         result = await client.purchase_stars("@user", amount=500)
 
@@ -69,6 +69,50 @@ async def test_purchase_stars_success(client: FragmentClient) -> None:
     assert result.transaction_id == FAKE_TX_HASH
     assert result.username == "@user"
     assert result.amount == 500
+
+
+@pytest.mark.asyncio
+async def test_purchase_stars_confirmed_reflects_fragment_state(client: FragmentClient) -> None:
+    call_mock = AsyncMock(
+        side_effect=[
+            {"found": {"recipient": FAKE_RECIPIENT}},
+            {},  # updateStarsBuyState
+            {"req_id": FAKE_REQ_ID},
+            FAKE_TRANSACTION,
+        ]
+    )
+    with (
+        patch.object(client, "call", call_mock),
+        patch.object(_purchase_stars_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
+        patch.object(_purchase_stars_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
+        patch.object(
+            _purchase_stars_mod, "confirm_purchase", AsyncMock(return_value={"ok": True, "need_update": False, "mode": "done"})
+        ),
+    ):
+        result = await client.purchase_stars("@user", amount=500)
+
+    assert result.confirmed is True
+
+
+@pytest.mark.asyncio
+async def test_purchase_stars_not_confirmed_when_fragment_never_confirms(client: FragmentClient) -> None:
+    call_mock = AsyncMock(
+        side_effect=[
+            {"found": {"recipient": FAKE_RECIPIENT}},
+            {},  # updateStarsBuyState
+            {"req_id": FAKE_REQ_ID},
+            FAKE_TRANSACTION,
+        ]
+    )
+    with (
+        patch.object(client, "call", call_mock),
+        patch.object(_purchase_stars_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
+        patch.object(_purchase_stars_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
+        patch.object(_purchase_stars_mod, "confirm_purchase", AsyncMock(return_value=None)),
+    ):
+        result = await client.purchase_stars("@user", amount=500)
+
+    assert result.confirmed is False
 
 
 @pytest.mark.asyncio
@@ -81,7 +125,7 @@ async def test_purchase_stars_passes_payment_method(client: FragmentClient) -> N
             FAKE_TRANSACTION,
         ]
     )
-    proc_mock = AsyncMock(return_value=FAKE_TX_HASH)
+    proc_mock = AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))
     with (
         patch.object(client, "call", call_mock),
         patch.object(_purchase_stars_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
@@ -181,7 +225,7 @@ async def test_giveaway_stars_success(client: FragmentClient) -> None:
             ),
         ),
         patch.object(_giveaway_stars_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
-        patch.object(_giveaway_stars_mod, "process_transaction", AsyncMock(return_value=FAKE_TX_HASH)),
+        patch.object(_giveaway_stars_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
     ):
         result = await client.giveaway_stars("@channel", winners=3, amount=1000)
 
@@ -190,6 +234,33 @@ async def test_giveaway_stars_success(client: FragmentClient) -> None:
     assert result.channel == "@channel"
     assert result.winners == 3
     assert result.amount == 1000
+
+
+@pytest.mark.asyncio
+async def test_giveaway_stars_confirmed_reflects_fragment_state(client: FragmentClient) -> None:
+    with (
+        patch.object(
+            client,
+            "call",
+            AsyncMock(
+                side_effect=[
+                    {"found": {"recipient": FAKE_RECIPIENT}},
+                    {},
+                    {},
+                    {"req_id": FAKE_REQ_ID},
+                    FAKE_TRANSACTION,
+                ]
+            ),
+        ),
+        patch.object(_giveaway_stars_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),
+        patch.object(_giveaway_stars_mod, "process_transaction", AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))),
+        patch.object(
+            _giveaway_stars_mod, "confirm_purchase", AsyncMock(return_value={"ok": True, "need_update": False, "mode": "done"})
+        ),
+    ):
+        result = await client.giveaway_stars("@channel", winners=3, amount=1000)
+
+    assert result.confirmed is True
 
 
 @pytest.mark.asyncio
@@ -203,7 +274,7 @@ async def test_giveaway_stars_passes_payment_method(client: FragmentClient) -> N
             FAKE_TRANSACTION,
         ]
     )
-    proc_mock = AsyncMock(return_value=FAKE_TX_HASH)
+    proc_mock = AsyncMock(return_value=(FAKE_TX_HASH, FAKE_TX_BOC))
     with (
         patch.object(client, "call", call_mock),
         patch.object(_giveaway_stars_mod, "get_account_info", AsyncMock(return_value=FAKE_ACCOUNT)),

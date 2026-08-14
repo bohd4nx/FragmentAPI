@@ -69,7 +69,7 @@ class FragmentClient:
         wallet_version: str = "V5R1",
         api_provider: str = "tonapi",
         timeout: float = DEFAULT_TIMEOUT,
-        headers: dict[str, str] | None = None,
+        headers: dict[str, str | None] | None = None,
     ) -> None:
         validate_credentials(seed, api_key)
         provider = normalize_provider(api_provider)
@@ -83,7 +83,7 @@ class FragmentClient:
         self.cookies: dict[str, Any] = parsed_cookies
         self.wallet_version: WalletVersion = version
         self.timeout: float = timeout
-        self.headers: dict[str, str] = headers if headers is not None else BASE_HEADERS
+        self.headers: dict[str, str | None] = headers if headers is not None else BASE_HEADERS
         self.marketplace = MarketplaceService(self)
         self.purchases = PurchasesService(self)
         self.giveaways = GiveawaysService(self)

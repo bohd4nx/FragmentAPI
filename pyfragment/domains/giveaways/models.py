@@ -9,11 +9,12 @@ class StarsGiveawayResult:
     channel: str
     winners: int
     amount: int
+    confirmed: bool = False
 
     def __repr__(self) -> str:
         return (
             f"StarsGiveawayResult(channel='{self.channel}', winners={self.winners}, "
-            f"amount={self.amount} stars per winner, tx='{self.transaction_id}')"
+            f"amount={self.amount} stars per winner, tx='{self.transaction_id}', confirmed={self.confirmed})"
         )
 
 
@@ -23,9 +24,10 @@ class PremiumGiveawayResult:
     channel: str
     winners: int
     amount: int
+    confirmed: bool = False
 
     def __repr__(self) -> str:
         return (
             f"PremiumGiveawayResult(channel='{self.channel}', winners={self.winners}, "
-            f"amount={self.amount} months per winner, tx='{self.transaction_id}')"
+            f"amount={self.amount} months per winner, tx='{self.transaction_id}', confirmed={self.confirmed})"
         )

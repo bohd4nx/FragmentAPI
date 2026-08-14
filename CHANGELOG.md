@@ -7,6 +7,46 @@ and this project uses [Calendar Versioning](https://calver.org/) (`YYYY.MINOR.MI
 
 ---
 
+## [Unreleased]
+
+---
+
+## [2026.3.4] — 2026-08-14
+
+### Added
+
+- `StarsResult`, `PremiumResult`, `AdsTopupResult`, `AdsRechargeResult`, `StarsGiveawayResult`, and `PremiumGiveawayResult` now carry a `confirmed: bool` field, reflecting whether Fragment's own backend acknowledged the broadcast transaction. `transaction_id` is still set as soon as the transfer is broadcast — `confirmed` is a separate, best-effort signal.
+
+### Changed
+
+- Purchase, giveaway, and Ads topup/recharge flows now report the broadcast transaction to Fragment (`confirmReq`) and wait for Fragment's own confirmation, instead of treating a successful broadcast as the end of the flow.
+- A failed purchase/giveaway/topup now cancels the Fragment invoice it opened (`cancelInvoice`), except when the broadcast itself is what failed — in that case the invoice is left alone, since it's unclear whether the transaction reached the chain.
+- `BASE_HEADERS` no longer hardcodes `User-Agent`, `Sec-Ch-Ua*`, or `Accept-Language` — `curl_cffi`'s `impersonate="chrome"` already supplies these consistently with its real TLS/HTTP2 fingerprint, and hardcoding them risked drifting out of sync with it.
+- `get_fragment_hash()` no longer reuses XHR-style headers for the plain page load used to extract Fragment's request hash; it now lets `curl_cffi`'s page-navigation defaults apply on their own.
+- Refreshed the spoofed Tonkeeper `appVersion` to `26.07.1`.
+
+### Fixed
+
+- Fixed the request hash extraction regex in `get_fragment_hash()` to correctly match Fragment's HTML.
+- Removed the dead `x-aj-referer` header, not present in Fragment's actual traffic.
+- Excluded `*.md` from `ruff format` so CI doesn't fail whenever a `ruff` release changes how it formats Python code fences in `CHANGELOG.md`/`README.md` (`ruff` isn't pinned in dev deps).
+- `search_gifts()` pagination was broken: Fragment expects the next page's cursor as `offset_id`, not `offset`, and answers with `{"part": true, "body": ..., "foot": ...}` instead of a single `"html"` field — the parser now handles both request and response shapes correctly.
+- `parse_required_payment_amount()` failed to parse Fragment-formatted amounts with thousand separators (e.g. `"1,000,000,000"`), silently disabling the pre-broadcast balance check for large Ads top-ups.
+- Stars/Premium/giveaway/Ads init requests that fail without a `req_id` now raise Fragment's actual error message (e.g. `"Amount is invalid"`) instead of a generic "no request ID" error.
+- `search_gifts()`'s `attr` filter was sent as Python's `str(list)` (e.g. `"['Sweet Glaze']"`) instead of a JSON array, which Fragment doesn't understand — now serialized with `json.dumps()`.
+- `search_usernames()`/`search_numbers()` pagination never worked: Fragment doesn't return a `next_offset_id` JSON field, the cursor lives in the HTML as `data-next-offset`, and paginated responses use the same `{"part": true, "body": ..., "foot": ...}` shape as gift search — both are now parsed correctly.
+- `parse_auction_rows()` returned `date: None` for sold/plain listings, since their `<time>` tag has no `data-relative` attribute (only active-auction countdowns do) — now falls back to a plain `<time datetime="...">` match.
+
+---
+
+## [2026.3.3] — 2026-07-05
+
+### Changed
+
+- Replaced `httpx` with `curl_cffi` (`impersonate="chrome"`) for all HTTP requests, for a TLS/HTTP2 fingerprint closer to a real browser.
+
+---
+
 ## [2026.3.2] — 2026-06-16
 
 ### Added
@@ -170,6 +210,7 @@ The TON blockchain has been rebranded to **GRAM (ex TON)**. All identifiers, mes
 - `get_cookies_from_browser(browser)` — extract Fragment session cookies directly from an installed browser (Chrome, Firefox, Edge, Brave, Arc, Opera, Safari, and more); no browser extension or manual copy-paste required
   ```python
   from pyfragment import get_cookies_from_browser
+
   result = get_cookies_from_browser("chrome")  # or "firefox", "edge", "brave", ...
   client = FragmentClient(seed="...", api_key="...", cookies=result.cookies)
   print(result.expires)  # ISO 8601 expiry of stel_ssid, or None for session cookies

@@ -101,7 +101,21 @@ async def test_search_gifts_with_offset(client: FragmentClient) -> None:
 
     assert isinstance(result, GiftsResult)
     call_data = mock_call.call_args[0][1]
-    assert call_data["offset"] == 60
+    assert call_data["offset_id"] == 60
+
+
+@pytest.mark.asyncio
+async def test_search_gifts_paginated_response_shape(client: FragmentClient) -> None:
+    # Fragment answers offset_id requests with {"part": true, "body": ..., "foot": ...}
+    # instead of a single "html" field.
+    body, _, foot = FAKE_GIFTS_HTML.rpartition('<a class="tm-catalog-grid-more')
+    foot = '<a class="tm-catalog-grid-more' + foot
+    with patch.object(client, "call", AsyncMock(return_value={"ok": True, "part": True, "body": body, "foot": foot})):
+        result = await client.search_gifts(offset=60)
+
+    assert isinstance(result, GiftsResult)
+    assert len(result.items) == 2
+    assert result.next_offset == 60
 
 
 @pytest.mark.asyncio
@@ -133,9 +147,9 @@ async def test_search_gifts_with_attr(client: FragmentClient) -> None:
 
     assert isinstance(result, GiftsResult)
     call_data = mock_call.call_args[0][1]
-    assert call_data["attr[Model]"] == ["Delicate Wash", "Foosball", "Chocolate"]
-    assert call_data["attr[Backdrop]"] == ["Celtic Blue", "Carrot Juice", "Orange"]
-    assert call_data["attr[Symbol]"] == ["Crystal Ball", "Tetsubin", "Acorn"]
+    assert call_data["attr[Model]"] == '["Delicate Wash", "Foosball", "Chocolate"]'
+    assert call_data["attr[Backdrop]"] == '["Celtic Blue", "Carrot Juice", "Orange"]'
+    assert call_data["attr[Symbol]"] == '["Crystal Ball", "Tetsubin", "Acorn"]'
     assert call_data["collection"] == "artisanbrick"
     assert call_data["sort"] == "listed"
     assert call_data["filter"] == "auction"

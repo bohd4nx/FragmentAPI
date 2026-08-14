@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyfragment"
-version = "2026.3.3"
+version = "2026.3.4"
 description = "Async Python client for the Fragment.com marketplace API."
 readme = "README.md"
 license = { text = "MIT" }
@@ -58,6 +58,9 @@ addopts = "-v --tb=short"
 [tool.ruff]
 line-length = 128
 target-version = "py311"
+# Newer ruff releases format Python code fences inside Markdown by default; we don't want
+# CHANGELOG.md/README.md code samples reformatted as a side effect of bumping the linter.
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]

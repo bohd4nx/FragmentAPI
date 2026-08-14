@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7.0.1
 
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7.0.0
       with:
         python-version: "3.11"
         cache: pip
@@ -33,9 +33,9 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7.0.1
 
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7.0.0
       with:
         python-version: ${{ matrix.python-version }}
         cache: pip
