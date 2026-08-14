@@ -19,3 +19,8 @@ def test_parse_required_payment_amount_usdt_uses_amount() -> None:
 def test_parse_required_payment_amount_usdt_falls_back_to_amount() -> None:
     init_response = {"amount": "1.25", "content": "<p>no usd icon</p>"}
     assert parse_required_payment_amount(init_response) == 1.25
+
+
+def test_parse_required_payment_amount_strips_thousand_separators() -> None:
+    init_response = {"amount": "1,000,000,000"}
+    assert parse_required_payment_amount(init_response) == 1_000_000_000.0
