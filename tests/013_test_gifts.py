@@ -147,9 +147,9 @@ async def test_search_gifts_with_attr(client: FragmentClient) -> None:
 
     assert isinstance(result, GiftsResult)
     call_data = mock_call.call_args[0][1]
-    assert call_data["attr[Model]"] == ["Delicate Wash", "Foosball", "Chocolate"]
-    assert call_data["attr[Backdrop]"] == ["Celtic Blue", "Carrot Juice", "Orange"]
-    assert call_data["attr[Symbol]"] == ["Crystal Ball", "Tetsubin", "Acorn"]
+    assert call_data["attr[Model]"] == '["Delicate Wash", "Foosball", "Chocolate"]'
+    assert call_data["attr[Backdrop]"] == '["Celtic Blue", "Carrot Juice", "Orange"]'
+    assert call_data["attr[Symbol]"] == '["Crystal Ball", "Tetsubin", "Acorn"]'
     assert call_data["collection"] == "artisanbrick"
     assert call_data["sort"] == "listed"
     assert call_data["filter"] == "auction"

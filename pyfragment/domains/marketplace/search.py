@@ -80,9 +80,12 @@ async def search_numbers(
         if result.get("error"):
             raise FragmentAPIError(result["error"])
 
-        items = parse_auction_rows(result.get("html") or "")
-        raw_noi = result.get("next_offset_id")
-        next_offset_id = str(raw_noi) if raw_noi else None
+        # Paginated (offset_id) responses come back as {"part": true, "body": ..., "foot": ...}
+        # instead of a single "html" field - stitch them together before parsing.
+        html = result.get("html")
+        if html is None:
+            html = (result.get("body") or "") + (result.get("foot") or "")
+        items, next_offset_id = parse_auction_rows(html)
         return NumbersResult(items=items, next_offset_id=next_offset_id)
 
     except FragmentError as exc:
@@ -122,7 +125,7 @@ async def search_gifts(
         data["view"] = view
     if attr is not None:
         for trait, values in attr.items():
-            data[f"attr[{trait}]"] = values
+            data[f"attr[{trait}]"] = json.dumps(values)
     if offset is not None:
         data["offset_id"] = offset
 
